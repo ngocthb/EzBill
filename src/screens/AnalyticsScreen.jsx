@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import bg1 from '../../assets/images/bg1.png';
+import { formatCurrencyWithOptions } from '../utils/formatUtils';
 
 const { width, height } = Dimensions.get('window');
 
@@ -75,11 +76,11 @@ const AnalyticsScreen = () => {
     ]);
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('vi-VN', {
+        return formatCurrencyWithOptions(amount, {
             style: 'currency',
             currency: 'VND',
             minimumFractionDigits: 0
-        }).format(amount).replace('₫', 'đ̲');
+        }).replace('₫', 'đ̲');
     };
 
     const getMaxAmount = () => {

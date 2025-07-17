@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import bg1 from '../../assets/images/bg1.png';
 import { StepSelector, AddMemberModal } from '../components';
+import { formatPrice } from '../utils/formatUtils';
 import axiosClient from '~/apis/axiosClient';
 import Toast from 'react-native-toast-message';
 
@@ -30,7 +31,7 @@ const CreateGroupScreen = () => {
     const [fromDate, setFromDate] = useState(new Date()); // Ngày hiện tại
     const [toDate, setToDate] = useState(new Date()); // Ngày hiện tại
     const [budget, setBudget] = useState('');
-
+    const [user, setUser] = useState(null);
     // State cho việc hiển thị DateTimePicker
     const [showFromDatePicker, setShowFromDatePicker] = useState(false);
     const [showToDatePicker, setShowToDatePicker] = useState(false);
@@ -43,34 +44,32 @@ const CreateGroupScreen = () => {
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [isSelectingLeader, setIsSelectingLeader] = useState(false);
 
-    // Danh sách tất cả thành viên có thể thêm
-    const [availableMembers, setAvailableMembers] = useState([
+    // Danh sách ban đầu của tất cả thành viên có thể thêm
+    const initialAvailableMembers = [
         {
-            id: "ccb3ef34-021f-4f54-9007-2fd47fffdb1d",
-            name: "huynhcongminhtri79",
-            subtitle: "Available",
-            avatar: "https://avatar.iran.liara.run/public/48"
+            accountId: "ccb3ef34-021f-4f54-9007-2fd47fffdb1d",
+            email: "huynhcongminhtri79",
+            status: "ACTIVE"
         },
         {
-            id: "2179fd2a-fc41-4baa-882a-fe27e4b16d0b",
-            name: "trihcmse183799",
-            subtitle: "Available",
-            avatar: "https://mir-s3-cdn-cf.behance.net/user/276/113df11590428999.660561235c068.jpg"
+            accountId: "2179fd2a-fc41-4baa-882a-fe27e4b16d0b",
+            email: "trihcmse183799",
+            status: "ACTIVE"
         },
         {
-            id: "011e8d39-2705-4cfc-a6d7-103f2f8abbbe",
-            name: "paavagl19",
-            subtitle: "Available",
-            avatar: "https://th.bing.com/th/id/OIP.JBpgUJhTt8cI2V05-Uf53AHaG1?r=0&o=7rm=3&rs=1&pid=ImgDetMain&o=7&rm=3"
+            accountId: "011e8d39-2705-4cfc-a6d7-103f2f8abbbe",
+            email: "paavagl19",
+            status: "ACTIVE"
         },
         {
-            id: "cf0ab205-f29e-4fa8-b182-7c38262a5281",
-            name: "hhuy00355",
-            subtitle: "Available",
-            avatar: "https://tse1.mm.bing.net/th/id/OIP.-DonqiW8gRye2uR_9F6qYAHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+            accountId: "cf0ab205-f29e-4fa8-b182-7c38262a5281",
+            email: "hhuy00355",
+            status: "ACTIVE"
         }
-    ]);
+    ];
 
+    // Danh sách tất cả thành viên có thể thêm
+    const [availableMembers, setAvailableMembers] = useState(initialAvailableMembers);
 
     const [members, setMembers] = useState([
     ]);
@@ -153,21 +152,9 @@ const CreateGroupScreen = () => {
         navigation.goBack();
     };
 
-    // Hàm format số tiền
-    const formatCurrency = (value) => {
-        // Loại bỏ tất cả ký tự không phải số
-        const numericValue = value.replace(/[^0-9]/g, '');
-
-        // Nếu không có số nào, trả về chuỗi rỗng
-        if (!numericValue) return '';
-
-        // Thêm dấu phẩy vào số
-        return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    };
-
     // Hàm xử lý khi thay đổi budget
     const handleBudgetChange = (value) => {
-        const formattedValue = formatCurrency(value);
+        const formattedValue = formatPrice(value);
         setBudget(formattedValue);
     };
 
@@ -186,8 +173,6 @@ const CreateGroupScreen = () => {
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     };
-
-
 
     // Hàm xử lý khi chọn ngày
     const onFromDateChange = (event, selectedDate) => {
@@ -280,7 +265,6 @@ const CreateGroupScreen = () => {
         }
     };
 
-
     const handleGenerate = async () => {
         try {
             setIsLoading(true);
@@ -307,19 +291,21 @@ const CreateGroupScreen = () => {
                 "endDate": formatDateForLog(toDate),
                 "budget": budget ? parseFloat(budget.replace(/,/g, '')) : null,
                 "tripMember": members.map(member => ({
-                    "accountId": member.id,
+                    "accountId": member.accountId,
                     "amount": null
                 }))
             }
 
             const response = await axiosClient.post('trip', data)
+
             if (response.status === 200) {
                 Toast.show({
                     type: 'success',
                     text1: 'Tạo nhóm thành công',
                     text2: 'Nhóm của bạn đã được tạo thành công!'
                 });
-                navigation.navigate('Summary');
+                const tripId = response.data.tripId;
+                navigation.navigate('Summary', { tripId });
                 setTitle('');
                 setFromDate(new Date());
                 setToDate(new Date());
@@ -361,20 +347,17 @@ const CreateGroupScreen = () => {
     };
 
     const handleSelectMember = (selectedMember) => {
-        if (isSelectingLeader) {
-            // Nếu đang chọn trưởng nhóm
-            setGroupLeader(selectedMember);
-            setIsSelectingLeader(false);
-        } else {
-            // Nếu đang chọn thành viên thường
-            // Kiểm tra xem thành viên đã có trong danh sách chưa
-            const isAlreadyMember = members.some(member => member.id === selectedMember.id);
+        // Add member to group with correct structure
+        const newMember = {
+            accountId: selectedMember.accountId,
+            email: selectedMember.email,
+            status: selectedMember.status || "ACTIVE"
+        };
 
-            if (!isAlreadyMember) {
-                setMembers([...members, selectedMember]);
-            }
-        }
-
+        setMembers(prevMembers => [...prevMembers, newMember]);
+        setAvailableMembers(prevAvailable =>
+            prevAvailable.filter(member => member.accountId !== selectedMember.accountId)
+        );
         setShowAddMemberModal(false);
     };
 
@@ -384,7 +367,26 @@ const CreateGroupScreen = () => {
     };
 
     const handleRemoveMember = (memberId) => {
-        setMembers(members.filter(member => member.id !== memberId));
+        // Prevent removing the logged-in user
+        if (user && memberId === user.accountId) return;
+
+        // Find the member to remove
+        const memberToRemove = members.find(member => member.accountId === memberId);
+        if (!memberToRemove) return;
+
+        // Remove the member from the group
+        setMembers(prevMembers =>
+            prevMembers.filter(member => member.accountId !== memberId)
+        );
+
+        // Add the removed member back to availableMembers with correct structure
+        const availableMember = {
+            accountId: memberToRemove.accountId,
+            email: memberToRemove.email,
+            status: memberToRemove.status || "ACTIVE"
+        };
+
+        setAvailableMembers(prevAvailable => [...prevAvailable, availableMember]);
     };
 
     const handleFromCurrencyChange = (currencyCode) => {
@@ -441,6 +443,60 @@ const CreateGroupScreen = () => {
         return rates[`${fromCurrency}_${toCurrency}`] || 'Tỷ giá không có sẵn';
     };
 
+    const fetchUserData = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axiosClient.get("profile");
+
+            if (response.status === 200) {
+                setUser(response.data);
+
+            }
+
+        } catch (error) {
+
+            Toast.show({
+                type: 'error',
+                text1: 'Lỗi tải dữ liệu',
+                text2: 'Không thể tải thông tin người dùng. Vui lòng thử lại sau.'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchUserData();
+    }, []);
+
+    // Đảm bảo user login luôn nằm trong nhóm
+    useEffect(() => {
+        if (user && user.accountId) {
+            const isInMembers = members.some(m => m.accountId === user.accountId);
+            if (!isInMembers) {
+                const userMember = {
+                    accountId: user.accountId,
+                    email: user.email || user.name || 'Bạn',
+                    status: "ACTIVE"
+                };
+                setMembers(prevMembers => [userMember, ...prevMembers]);
+            }
+        }
+    }, [user]);
+
+    // Cập nhật lại danh sách thành viên có sẵn khi có sự thay đổi về user hoặc members
+    useEffect(() => {
+        if (user && user.accountId) {
+            // Filter out the logged-in user and existing group members from availableMembers
+            const filteredMembers = initialAvailableMembers.filter(member =>
+                member.accountId !== user.accountId &&
+                !members.some(m => m.accountId === member.accountId)
+            );
+
+            setAvailableMembers(filteredMembers);
+        }
+    }, [user, members]);
+
     return (
         <View className='flex-1 bg-bg-default relative'>
 
@@ -491,7 +547,8 @@ const CreateGroupScreen = () => {
                         value={title}
                         onChangeText={setTitle}
                         placeholder='Nhập tên nhóm'
-                        className='bg-white rounded-xl px-4 py-4 text-2xl text-gray-900 font-bold shadow-md'
+                        placeholderTextColor="#9CA3AF"
+                        className='bg-white rounded-xl px-4 py-4 text-2xl text-gray-900 font-bold shadow-sm'
 
                     />
                 </View>
@@ -505,7 +562,7 @@ const CreateGroupScreen = () => {
                     <View className='flex-row gap-4' >
                         <TouchableOpacity
                             onPress={() => openPicker('fromDate')}
-                            className='flex-1 bg-white rounded-xl px-4 py-4 shadow-md'
+                            className='flex-1 bg-white rounded-xl px-4 py-4 shadow-sm'
 
                         >
                             <Text className='text-xs text-gray-500 mb-1'>Từ ngày</Text>
@@ -516,7 +573,7 @@ const CreateGroupScreen = () => {
 
                         <TouchableOpacity
                             onPress={() => openPicker('toDate')}
-                            className='flex-1 bg-white rounded-xl px-4 py-4 shadow-md'
+                            className='flex-1 bg-white rounded-xl px-4 py-4 shadow-sm'
 
                         >
                             <Text className='text-xs text-gray-500 mb-1'>Đến ngày</Text>
@@ -542,47 +599,14 @@ const CreateGroupScreen = () => {
                         onChangeText={handleBudgetChange}
                         placeholder='VD: 5,000,000'
                         keyboardType='numeric'
-                        className='bg-white rounded-xl px-4 py-4 text-base text-gray-900 shadow-md'
-
+                        placeholderTextColor="#9CA3AF"
+                        className='bg-white rounded-xl px-4 py-4 text-base text-gray-900 shadow-sm'
                     />
+
                     <Text className='text-xs text-gray-500 mt-2'>
                         Nhập số tiền dự kiến cho chuyến đi (không bắt buộc)
                     </Text>
                 </View>
-
-                {/* Trưởng nhóm */}
-                {/* <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Trưởng nhóm
-                    </Text>
-                    <TouchableOpacity
-                        onPress={() => {
-                            setIsSelectingLeader(true);
-                            setShowAddMemberModal(true);
-                        }}
-                        className='flex-row items-center bg-white rounded-xl px-4 py-4 shadow-md'
-                       
-                        <View className='w-12 h-12 rounded-full mr-3 items-center justify-center overflow-hidden'
-                            style={{ backgroundColor: '#E8E8E8' }}>
-                            <Image
-                                source={{
-                                    uri: groupLeader?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
-                                }}
-                                className='w-full h-full'
-                                resizeMode='cover'
-                            />
-                        </View>
-                        <View className='flex-1'>
-                            <Text className='text-gray-900 font-medium text-base'>
-                                {groupLeader?.name || 'Chọn trưởng nhóm'}
-                            </Text>
-                            <Text className='text-gray-500 text-sm'>
-                                {groupLeader ? 'Group Admin' : 'Nhấn để chọn trưởng nhóm'}
-                            </Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                    </TouchableOpacity>
-                </View> */}
 
                 {/* Quy đổi tiền tệ */}
                 <View className="mb-6">
@@ -672,21 +696,21 @@ const CreateGroupScreen = () => {
                         {/* Hiển thị các thành viên hiện tại */}
                         {members.map((member, index) => (
                             <TouchableOpacity
-                                key={member.id}
+                                key={member.accountId}
                                 className='relative'
-                                onPress={() => handleRemoveMember(member.id)}
+                                onPress={() => handleRemoveMember(member.accountId)}
                             >
                                 <View className='w-14 h-14 rounded-full overflow-hidden'
                                     style={{ backgroundColor: '#4A5568' }}>
                                     <Image
-                                        source={{ uri: member.avatar }}
+                                        source={{ uri: "https://tse1.mm.bing.net/th/id/OIP.-DonqiW8gRye2uR_9F6qYAHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" }}
                                         className='w-full h-full'
                                         resizeMode='cover'
                                     />
                                 </View>
-                                <View className='absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full items-center justify-center border border-white'>
+                                {member.accountId !== user?.accountId && (<View className='absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full items-center justify-center border border-white'>
                                     <Text className='text-white text-xs font-bold'>-</Text>
-                                </View>
+                                </View>)}
                             </TouchableOpacity>
                         ))}
 
@@ -745,7 +769,7 @@ const CreateGroupScreen = () => {
                     visible={currentPickerType !== null}
                     onRequestClose={cancelIOSPicker}
                 >
-                    <View className='flex-1 justify-end bg-black bg-opacity-50'>
+                    <View className='flex-1 justify-end bg-black/40 bg-opacity-50'>
                         <View className='bg-white rounded-t-3xl pb-10'>
                             {/* Header */}
                             <View className='flex-row justify-between items-center px-5 pt-5 pb-3 border-b border-gray-200'>

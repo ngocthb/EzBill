@@ -22,6 +22,8 @@ import ChangePasswordScreen from './ChangePasswordScreen';
 import AnalyticsScreen from './AnalyticsScreen';
 import FriendsScreen from './FriendsScreen';
 import ScanBillScreen from './ScanBillScreen';
+import TaxRefundScreen from './TaxRefundScreen';
+import AllGroupsScreen from './AllGroupsScreen';
 export {
   SplashScreen,
   WelcomeScreen,
@@ -48,4 +50,6 @@ export {
   AnalyticsScreen,
   FriendsScreen,
   ScanBillScreen,
+  TaxRefundScreen,
+  AllGroupsScreen,
 };

@@ -155,7 +155,7 @@ const AccountScreen = () => {
                         colors={['#667eea', '#764ba2']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
-                        className="rounded-2xl p-6"
+
                         style={{
                             shadowColor: '#6366F1',
                             shadowOffset: { width: 0, height: 4 },
@@ -163,6 +163,7 @@ const AccountScreen = () => {
                             shadowRadius: 12,
                             elevation: 8,
                             borderRadius: 16,
+                            padding: 16,
                         }}
                     >
                         <View className="flex-row items-center justify-between mb-4">

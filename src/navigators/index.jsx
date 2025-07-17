@@ -1,6 +1,8 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Toast from 'react-native-toast-message';
+import toastConfig from '../components/CustomToast';
 import {
     SplashScreen,
     WelcomeScreen,
@@ -17,7 +19,9 @@ import {
     ChangePasswordScreen,
     AnalyticsScreen,
     FriendsScreen,
-    ScanBillScreen
+    ScanBillScreen,
+    TaxRefundScreen,
+    AllGroupsScreen
 } from '../screens';
 import HomeTabs from './BottomTabs';
 
@@ -188,7 +192,22 @@ const AppNavigator = () => {
                         gestureEnabled: true
                     }}
                 />
+                <Stack.Screen
+                    name='TaxRefund'
+                    component={TaxRefundScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
+                <Stack.Screen
+                    name='AllGroups'
+                    component={AllGroupsScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
             </Stack.Navigator>
+            <Toast config={toastConfig} />
         </NavigationContainer>
     );
 };

@@ -10,6 +10,7 @@ import {
     Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { formatEmail } from '~/utils/formatUtils';
 
 const { width, height } = Dimensions.get('window');
 
@@ -17,7 +18,7 @@ const AddMemberModal = ({
     visible,
     onClose,
     onSelectMember,
-    availableMembers = [],
+    availableMembers,
     selectedMembers = [],
     isSelectingLeader = false
 }) => {
@@ -25,14 +26,14 @@ const AddMemberModal = ({
 
     // Lọc danh sách thành viên theo từ khóa tìm kiếm
     const filteredMembers = availableMembers.filter(member => {
-        const isAlreadySelected = selectedMembers.some(selected => selected.id === member.id);
-        const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const isAlreadySelected = selectedMembers.some(selected => selected.accountId === member.accountId);
+        const matchesSearch = member.email?.toLowerCase().includes(searchQuery?.toLowerCase());
         return !isAlreadySelected && matchesSearch;
     });
 
     // Nhóm thành viên theo chữ cái đầu
     const groupedMembers = filteredMembers.reduce((acc, member) => {
-        const firstLetter = member.name.charAt(0).toUpperCase();
+        const firstLetter = member.email.charAt(0).toUpperCase();
         if (!acc[firstLetter]) {
             acc[firstLetter] = [];
         }
@@ -43,7 +44,11 @@ const AddMemberModal = ({
     const sortedGroups = Object.keys(groupedMembers).sort();
 
     const handleSelectMember = (member) => {
-        onSelectMember(member);
+        onSelectMember({
+            accountId: member.accountId,
+            email: member.email,
+            status: member.status || "ACTIVE"
+        });
         setSearchQuery('');
         onClose();
     };
@@ -102,16 +107,16 @@ const AddMemberModal = ({
                             </Text>
                             {groupedMembers[letter].map((member) => (
                                 <TouchableOpacity
-                                    key={member.id}
+                                    key={member.accountId}
                                     onPress={() => handleSelectMember(member)}
                                     className='flex-row items-center py-3 px-2 rounded-xl mb-1'
                                     style={{
                                         backgroundColor: 'rgba(0, 0, 0, 0.02)'
                                     }}
                                 >
-                                    <View className='w-12 h-12 rounded-full mr-3 overflow-hidden'>
+                                    <View className='w-12 h-12 rounded-full mr-3 overflow-hidden bg-gray-300'>
                                         <Image
-                                            source={{ uri: member.avatar }}
+                                            source={{ uri: "https://tse1.mm.bing.net/th/id/OIP.-DonqiW8gRye2uR_9F6qYAHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" }}
                                             style={{
                                                 width: '100%',
                                                 height: '100%'
@@ -121,10 +126,10 @@ const AddMemberModal = ({
                                     </View>
                                     <View className='flex-1'>
                                         <Text className='text-gray-900 font-medium text-base'>
-                                            {member.name}
+                                            {formatEmail(member.email)}
                                         </Text>
                                         <Text className='text-gray-500 text-sm'>
-                                            {member.subtitle}
+                                            {member.status}
                                         </Text>
                                     </View>
                                     <Ionicons name='chevron-forward' size={16} color='#D1D5DB' />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -8,30 +8,77 @@ import {
     StatusBar,
     SafeAreaView
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import bg1 from '../../assets/images/bg1.png';
 import summary1 from '../../assets/images/summary1.png';
+import axiosClient from '~/apis/axiosClient';
+import Toast from 'react-native-toast-message';
+import { formatEmail, formatCurrency } from '../utils/formatUtils';
+import sharingBill from '../../assets/images/sharingBill.gif';
 
 const ShareBill = () => {
     const navigation = useNavigation();
+    const route = useRoute();
+    const { tripId } = route.params;
+    const [resultShareBillData, setResultShareBillData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const fetchResultShareBillData = async () => {
+        try {
+            const response = await axiosClient.post("Settlement/generate", { tripId });
+            if (response.status === 200) {
+                setResultShareBillData(response.data);
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Lỗi',
+                    text2: 'Không thể lấy dữ liệu chia tiền'
+                });
+            }
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Lỗi',
+                text2: 'Không thể lấy dữ liệu chia tiền'
+            });
+        } finally {
+            setTimeout(() => setLoading(false), 2000);
+        }
+    };
 
-    // Mock data - 2 người trả tiền, 3 người nợ
-    const payerList = [
-        { name: 'Nguyễn Văn A', avatar: bg1, amount: '740,000đ̲' },
-        { name: 'Trần Minh B', avatar: bg1, amount: '500,000đ̲' }
-    ];
+    useEffect(() => {
+        fetchResultShareBillData();
+    }, []);
 
-    const debtList = [
-        { debtor: { name: 'Trần Thị C', avatar: bg1 }, creditor: { name: 'Nguyễn Văn A', avatar: bg1 }, amount: '310,000đ̲' },
-        { debtor: { name: 'Lê Văn D', avatar: bg1 }, creditor: { name: 'Trần Minh B', avatar: bg1 }, amount: '250,000đ̲' },
-        { debtor: { name: 'Phạm Thị E', avatar: bg1 }, creditor: { name: 'Nguyễn Văn A', avatar: bg1 }, amount: '180,000đ̲' }
-    ];
+    useFocusEffect(
+        useCallback(() => {
+            if (tripId) {
+                fetchResultShareBillData();
+            }
+        }, [tripId])
+    );
+
+    const payerList = resultShareBillData.filter(item => item.status === "UNPAID" && item.fromAccountName);
+    const debtList = resultShareBillData.filter(item => item.status === "UNPAID" && item.toAccountName);
 
     const handleCreateReminder = () => {
         console.log('Create Reminder');
     };
+
+    const totalAmount = resultShareBillData.reduce((sum, item) => sum + item.amount, 0);
+    const uniqueMembers = new Set(resultShareBillData.flatMap(item => [item.fromAccountName, item.toAccountName]));
+    const numberOfMembers = uniqueMembers.size;
+    const averageAmount = numberOfMembers > 0 ? totalAmount / numberOfMembers : 0;
+
+    if (loading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+                <Image source={sharingBill} style={{ width: 180, height: 180 }} resizeMode="contain" />
+                <Text style={{ marginTop: 24, fontSize: 18, color: '#6C63FF', fontWeight: 'bold' }}>Đang chia tiền...</Text>
+            </View>
+        );
+    }
 
     return (
         <>
@@ -39,14 +86,14 @@ const ShareBill = () => {
 
             <LinearGradient
                 colors={['#6C63FF', '#8B5CF6', '#A855F7']}
-                className="absolute inset-0"
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
             />
 
-            <SafeAreaView className="flex-1 pt-12 px-5">
+            <SafeAreaView className="flex-1 pt-12 px-8">
                 {/* Header */}
-                <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-row items-center justify-between mb-4 px-6">
                     <TouchableOpacity
                         onPress={() => navigation.goBack()}
                         className="w-12 h-12 rounded-2xl bg-white/25 backdrop-blur-sm items-center justify-center"
@@ -55,20 +102,17 @@ const ShareBill = () => {
                     </TouchableOpacity>
                     <View className="items-center">
                         <Text className="text-xl font-bold text-white">Kết quả chia tiền</Text>
-
                     </View>
                     <View className="w-12" />
                 </View>
 
-                {/* Main Content Card */}
-                <View className="flex-1 mb-12 bg-white rounded-3xl overflow-hidden shadow-2xl shadow-black/15">
+                <View className="flex-1 mb-6 bg-white rounded-3xl overflow-hidden shadow-2xl shadow-black/15 mx-6">
                     {/* Header Section */}
                     <View className="items-center py-8 px-6 bg-gradient-to-b from-purple-50 to-white border-b border-gray-100">
                         <View className="relative mb-4">
                             <View className="w-30 h-30 rounded-full items-center justify-center mt-4">
                                 <Image source={summary1} className="w-28 h-28" />
                             </View>
-
                         </View>
                         <Text className="text-2xl font-bold text-gray-800 mb-2">Hoàn thành!</Text>
                         <Text className="text-base text-gray-600">Đã chia tiền thành công</Text>
@@ -77,19 +121,15 @@ const ShareBill = () => {
                     {/* Stats Cards */}
                     <View className="flex-row px-6 py-6 bg-gray-50/55 mb-2">
                         <View className="flex-1 items-center bg-white rounded-2xl py-4 mx-1 shadow-sm">
-                            <Text className="text-lg font-bold text-gray-800">1,240,000đ̲</Text>
+                            <Text className="text-lg font-bold text-gray-800">{formatCurrency(totalAmount)}</Text>
                             <Text className="text-xs text-gray-500 mt-1">Tổng tiền</Text>
                         </View>
+
                         <View className="flex-1 items-center bg-white rounded-2xl py-4 mx-1 shadow-sm">
-                            <Text className="text-lg font-bold text-gray-800">4</Text>
-                            <Text className="text-xs text-gray-500 mt-1">Thành viên</Text>
-                        </View>
-                        <View className="flex-1 items-center bg-white rounded-2xl py-4 mx-1 shadow-sm">
-                            <Text className="text-lg font-bold text-gray-800">310,000đ̲</Text>
+                            <Text className="text-lg font-bold text-gray-800">{formatCurrency(averageAmount)}</Text>
                             <Text className="text-xs text-gray-500 mt-1">Trung bình</Text>
                         </View>
                     </View>
-
 
                     <ScrollView className="flex-1 " showsVerticalScrollIndicator={false}>
                         {/* Payers Section */}
@@ -108,12 +148,12 @@ const ShareBill = () => {
                             </View>
                             {payerList.map((payer, index) => (
                                 <View key={index} className=" p-4 flex-row items-center  mb-3">
-                                    <View className="w-12 h-12 rounded-full bg-white shadow-md items-center justify-center mr-4">
-                                        <Image source={payer.avatar} className="w-10 h-10 rounded-full" />
+                                    <View className="w-12 h-12 rounded-full  items-center justify-center mr-4">
+                                        <Image source={{ uri: "https://tse3.mm.bing.net/th/id/OIP.NCWhq45BtHNU_OWkdNjP0gHaHa?r=0&w=512&h=512&rs=1&pid=ImgDetMain&o=7&rm=3" }} className="w-10 h-10 rounded-full" />
                                     </View>
                                     <View className="flex-1">
-                                        <Text className="text-base font-bold text-gray-800">{payer.name}</Text>
-                                        <Text className="text-sm text-emerald-600 mt-1 font-semibold">✓ Đã thanh toán {payer.amount}</Text>
+                                        <Text className="text-base font-bold text-gray-800">{formatEmail(payer.fromAccountName)}</Text>
+                                        <Text className="text-sm text-emerald-600 mt-1 font-semibold">✓ Đã thanh toán {formatCurrency(payer.amount)} cho {payer.tripName}</Text>
                                     </View>
                                     <View className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center">
                                         <Ionicons name="checkmark" size={16} color="#FFFFFF" />
@@ -142,18 +182,18 @@ const ShareBill = () => {
                             {debtList.map((debt, index) => (
                                 <View key={index} className="flex-row items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
                                     <View className="flex-row items-center flex-1">
-                                        <Image source={debt.debtor.avatar} className="w-12 h-12 rounded-full mr-3" />
+                                        <Image source={{ uri: "https://tse3.mm.bing.net/th/id/OIP.NCWhq45BtHNU_OWkdNjP0gHaHa?r=0&w=512&h=512&rs=1&pid=ImgDetMain&o=7&rm=3" }} className="w-12 h-12 rounded-full mr-3" />
                                         <View className="flex-1">
-                                            <Text className="text-base font-semibold text-gray-800">{debt.debtor.name}</Text>
+                                            <Text className="text-base font-semibold text-gray-800">{formatEmail(debt.toAccountName)}</Text>
                                             <Text className="text-sm text-gray-500 mt-1">Cần thanh toán</Text>
                                         </View>
                                     </View>
                                     <View className="items-end">
-                                        <Text className="text-lg font-bold text-rose-500">{debt.amount}</Text>
+                                        <Text className="text-lg font-bold text-rose-500">{formatCurrency(debt.amount)}</Text>
                                         <View className="flex-row items-center mt-1">
                                             <Text className="text-xs text-gray-400 mr-1">đến</Text>
-                                            <Image source={debt.creditor.avatar} className="w-5 h-5 rounded-full mr-1" />
-                                            <Text className="text-xs font-medium text-emerald-600">{debt.creditor.name}</Text>
+                                            <Image source={bg1} className="w-5 h-5 rounded-full mr-1" />
+                                            <Text className="text-xs font-medium text-emerald-600">{formatEmail(debt.fromAccountName)}</Text>
                                         </View>
                                     </View>
                                 </View>
@@ -174,17 +214,12 @@ const ShareBill = () => {
                                 <Text className='text-text-button text-center text-lg font-bold mr-1'>
                                     TẠO NHẮC NHỞ
                                 </Text>
-
                             </View>
-
                         </TouchableOpacity>
-
-
-
                     </View>
-
                 </View>
-            </SafeAreaView>
+
+            </SafeAreaView >
         </>
     );
 };

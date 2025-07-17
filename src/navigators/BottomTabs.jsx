@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { View, TouchableOpacity, StatusBar } from 'react-native';
+import { View, TouchableOpacity, StatusBar, Platform, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import {
@@ -19,7 +19,13 @@ const HomeTabs = () => {
   const navigation = useNavigation();
   return (
     <>
-      <StatusBar backgroundColor='#EBFDFE' barStyle='dark-content' />
+      {Platform.OS === 'ios' ? (
+
+        <StatusBar barStyle='dark-content' />
+
+      ) : (
+        <StatusBar backgroundColor='#EBFDFE' barStyle='dark-content' />
+      )}
       <BottomTabs.Navigator
         screenOptions={{
           headerShown: false,
