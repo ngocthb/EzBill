@@ -72,7 +72,7 @@ const SettingsScreen = () => {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <View className="flex-1 bg-bg-default">
             <StatusBar backgroundColor="#667eea" barStyle="light-content" />
 
             {/* Background */}
@@ -96,10 +96,13 @@ const SettingsScreen = () => {
                 colors={['#667eea', '#764ba2']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                className="px-6 pt-4 pb-6"
+
                 style={{
                     borderBottomLeftRadius: 30,
-                    borderBottomRightRadius: 30
+                    borderBottomRightRadius: 30,
+                    paddingTop: 50,
+                    paddingBottom: 20,
+                    paddingHorizontal: 20,
                 }}
             >
                 <View className="flex-row items-center justify-between">
@@ -251,7 +254,11 @@ const SettingsScreen = () => {
                             colors={['#764ba2', '#667eea']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
-                            className="py-4"
+                            style={{
+                                paddingVertical: 12,
+                                paddingHorizontal: 20,
+                                borderRadius: 8
+                            }}
                         >
                             <Text className="text-white text-center font-semibold text-base">
                                 Lưu thay đổi
@@ -510,7 +517,7 @@ const SettingsScreen = () => {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 };
 

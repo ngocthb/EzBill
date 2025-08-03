@@ -11,6 +11,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatEmail } from '~/utils/formatUtils';
+import hcmt from '../../assets/images/hcmt.png';
+import hhuy from '../../assets/images/hhuy.webp';
+import trihcmse from '../../assets/images/trihcmse.webp';
+import paavagl from '../../assets/images/paavagl.webp';
 
 const { width, height } = Dimensions.get('window');
 
@@ -116,7 +120,12 @@ const AddMemberModal = ({
                                 >
                                     <View className='w-12 h-12 rounded-full mr-3 overflow-hidden bg-gray-300'>
                                         <Image
-                                            source={{ uri: "https://tse1.mm.bing.net/th/id/OIP.-DonqiW8gRye2uR_9F6qYAHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" }}
+                                            source={
+                                                member.email === 'huynhcongminhtri79' ? hcmt :
+                                                    member.email === 'hhuy00355' ? hhuy :
+                                                        member.email === 'trihcmse183799' ? trihcmse :
+                                                            paavagl
+                                            }
                                             style={{
                                                 width: '100%',
                                                 height: '100%'

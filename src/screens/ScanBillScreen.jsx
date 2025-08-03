@@ -327,7 +327,7 @@ const ScanBillScreen = () => {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-bg-default relative">
+        <View className="flex-1 bg-bg-default relative">
             {/* Background image for consistency with CreateBill */}
             <View
                 className="absolute bottom-0 left-0 right-0"
@@ -343,22 +343,45 @@ const ScanBillScreen = () => {
                     resizeMode='cover'
                 />
             </View>
-            <View className="flex-1 px-4 pt-12 pb-4">
-                {/* Header */}
-                <View className="flex-row items-center justify-between mb-6">
-                    <TouchableOpacity
-                        onPress={() => navigation.goBack()}
-                        className="p-2"
-                    >
-                        <Ionicons name="arrow-back" size={24} color="#1F2937" />
-                    </TouchableOpacity>
-                    <View className="flex-1 items-center">
-                        <Text className="text-xl font-bold text-gray-900">
-                            Quét hóa đơn
-                        </Text>
+            {/* Header */}
+            <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    paddingTop: 50,
+                    paddingBottom: 25,
+                    paddingHorizontal: 20,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    elevation: 8,
+                }}
+            >
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <TouchableOpacity
+                            onPress={() => navigation.goBack()}
+                            className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm items-center justify-center mr-4"
+                            style={{
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
+                            }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <View>
+                            <Text className="text-white text-2xl font-bold">Scan hóa đơn</Text>
+                            <Text className="text-white/80 text-sm mt-1">Nhập hóa đơn thông minh</Text>
+                        </View>
                     </View>
-                    <View className="w-10" />
                 </View>
+            </LinearGradient>
+
+            <View className="flex-1 px-4 pt-12 pb-4">
 
                 {!showCamera && !capturedImage && !extractedData && (
                     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -654,7 +677,7 @@ const ScanBillScreen = () => {
                     groupMembers={groupMembers}
                 />
             </View>
-        </SafeAreaView >
+        </View >
     );
 };
 

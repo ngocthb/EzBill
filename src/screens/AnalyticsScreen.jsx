@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { useAIChat } from '../contexts/AIChatContext';
 import bg1 from '../../assets/images/bg1.png';
 import { formatCurrencyWithOptions } from '../utils/formatUtils';
 
@@ -19,6 +20,7 @@ const { width, height } = Dimensions.get('window');
 
 const AnalyticsScreen = () => {
     const navigation = useNavigation();
+    const { isVisible, toggleAIChat } = useAIChat();
     const [selectedPeriod, setSelectedPeriod] = useState('month');
     const [stats, setStats] = useState({
         totalSpent: 12450000,
@@ -88,7 +90,7 @@ const AnalyticsScreen = () => {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gradient-to-br from-slate-50 to-blue-50">
+        <View className="flex-1 bg-bg-default">
             {/* Background */}
             <View className="absolute bottom-0 left-0 right-0" style={{ zIndex: 0 }}>
                 <Image
@@ -109,10 +111,12 @@ const AnalyticsScreen = () => {
                     colors={['#667eea', '#764ba2']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    className="px-6 pt-4 pb-8"
                     style={{
-                        borderBottomLeftRadius: 32,
-                        borderBottomRightRadius: 32
+                        borderBottomLeftRadius: 30,
+                        borderBottomRightRadius: 30,
+                        paddingTop: 50,
+                        paddingBottom: 20,
+                        paddingHorizontal: 20,
                     }}
                 >
                     <View className="flex-row items-center justify-between mb-8">
@@ -126,8 +130,14 @@ const AnalyticsScreen = () => {
                             <Text className="text-2xl font-bold text-white">Thống kê chi tiêu</Text>
                             <Text className="text-white/80 text-sm mt-1">Tháng 7, 2025</Text>
                         </View>
-                        <TouchableOpacity className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm items-center justify-center">
-                            <Ionicons name="options-outline" size={24} color="white" />
+                        <TouchableOpacity
+                            onPress={toggleAIChat}
+                            className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm items-center justify-center"
+                        >
+                            <Ionicons name="chatbubble" size={24} color="white" />
+                            {!isVisible && (
+                                <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+                            )}
                         </TouchableOpacity>
                     </View>
 
@@ -160,7 +170,7 @@ const AnalyticsScreen = () => {
                 </LinearGradient>
 
                 {/* Main Balance Card */}
-                <View className="px-6 -mt-6 mb-6">
+                <View className="px-6  mb-6">
                     <View
                         className="bg-white rounded-3xl p-6"
                         style={{
@@ -264,13 +274,15 @@ const AnalyticsScreen = () => {
                     <View className="flex-row space-x-4 mb-4">
                         <LinearGradient
                             colors={['#10B981', '#059669']}
-                            className="flex-1 rounded-2xl p-5"
                             style={{
+                                padding: 20,
+                                borderRadius: 16,
                                 shadowColor: '#10B981',
                                 shadowOffset: { width: 0, height: 4 },
                                 shadowOpacity: 0.15,
                                 shadowRadius: 12,
-                                elevation: 6
+                                elevation: 6,
+                                marginRight: 8
                             }}
                         >
                             <View className="flex-row items-center mb-2">
@@ -286,7 +298,7 @@ const AnalyticsScreen = () => {
                         </LinearGradient>
 
                         <View className="flex-1 space-y-4">
-                            <View className="bg-white rounded-2xl p-4 shadow-sm">
+                            <View className="bg-white rounded-2xl p-4 shadow-sm mb-2">
                                 <View className="flex-row items-center mb-2">
                                     <Ionicons name="people" size={20} color="#3B82F6" />
                                     <Text className="text-gray-600 text-sm ml-2">Nhóm</Text>
@@ -562,7 +574,7 @@ const AnalyticsScreen = () => {
                     </LinearGradient>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };
 

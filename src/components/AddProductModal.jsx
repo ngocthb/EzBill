@@ -15,7 +15,12 @@ import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import axiosClient from '../apis/axiosClient';
 import { formatPrice, parseFormattedPrice, formatDateToISO, truncateText } from '../utils/formatUtils';
-
+import { EXCHANGE_RATE_API_KEY } from '@env';
+import axios from 'axios';
+import hcmt from '../../assets/images/hcmt.png';
+import hhuy from '../../assets/images/hhuy.webp';
+import trihcmse from '../../assets/images/trihcmse.webp';
+import paavagl from '../../assets/images/paavagl.webp';
 const AddProductModal = ({
     visible,
     onClose,
@@ -32,7 +37,14 @@ const AddProductModal = ({
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState(null);
     const [splitType, setSplitType] = useState(1); // 0: người trả bao luôn, 1: chia đều, 2: chia tỉ lệ
-    const [ratios, setRatios] = useState({}); // Lưu tỉ lệ cho từng người dùng
+    const [ratios, setRatios] = useState({});
+    const [currency, setCurrency] = useState('VND');
+    const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+    const [exchangeRate, setExchangeRate] = useState(1);
+    const currencies = [
+        { code: 'VND', name: 'Việt Nam Đồng', symbol: '₫' },
+        { code: 'USD', name: 'Đô la Mỹ', symbol: '$' }
+    ];
 
     const requestPermission = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -87,6 +99,23 @@ const AddProductModal = ({
             setShowImagePicker(false);
         }
     };
+
+    const fetchExchangeRate = async () => {
+        try {
+            const response = await axios.get(`https://api.getgeoapi.com/v2/currency/convert?api_key=${EXCHANGE_RATE_API_KEY}&from=USD&to=VND&amount=1&format=json`)
+            setExchangeRate(response.data.rates.VND.rate);
+        } catch (error) {
+            console.error('Error fetching exchange rate:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Lỗi',
+                text2: 'Không thể lấy tỷ giá hối đoái. Vui lòng thử lại sau.'
+            });
+            return 1;
+        }
+
+    };
+
 
     const handleAddProduct = async () => {
         try {
@@ -159,7 +188,7 @@ const AddProductModal = ({
                     return { accountId: id, ratio: Number(ratios[id]) || 0 };
                 });
             }
-            // Build newBill object
+
             const newBill = {
                 id: Date.now().toString(),
                 tripId: tripId,
@@ -168,12 +197,14 @@ const AddProductModal = ({
                 eventDate: formatDateToISO(),
                 receiptUrl: imageUrl,
                 paidBy: selectedPayer.accountId || selectedPayer.id,
-                currency: 'VND',
+                currency: currency,
                 amountOriginal: parseFormattedPrice(productPrice),
-                exchangeRate: 1,
+                exchangeRate: currency === 'USD' ? exchangeRate : 1,
                 splitType: splitType,
                 eventUses: eventUses
             };
+
+            console.log('New Bill Data:', newBill);
 
             const response = await axiosClient.post('Event', newBill);
 
@@ -201,6 +232,8 @@ const AddProductModal = ({
                 setSelectedUsers([]);
                 setProductImage(null);
                 setShowImagePicker(false);
+                setCurrency('VND'); // Reset currency to default
+                setShowCurrencyPicker(false);
                 onClose();
             }
 
@@ -225,6 +258,8 @@ const AddProductModal = ({
         setSelectedUsers([]);
         setProductImage(null);
         setShowImagePicker(false);
+        setCurrency('VND'); // Reset currency to default
+        setShowCurrencyPicker(false);
         onClose();
     };
 
@@ -250,6 +285,7 @@ const AddProductModal = ({
 
     useEffect(() => {
         fetchUserData();
+        fetchExchangeRate();
     }, []);
 
     // Set default payer and users when modal opens and user/groupMembers are loaded
@@ -310,7 +346,19 @@ const AddProductModal = ({
                                 keyboardType='numeric'
                                 className='flex-1 text-gray-900 text-base font-medium'
                             />
-                            <Text className='text-gray-600 ml-2 font-medium'>đ</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowCurrencyPicker(true)}
+                                className='flex-row items-center ml-2 px-3 py-1 bg-gray-100 rounded-lg'
+                                disabled={loading}
+                            >
+                                <Text className='text-gray-700 font-medium mr-1'>
+                                    {currencies.find(c => c.code === currency)?.symbol}
+                                </Text>
+                                <Text className='text-gray-700 font-medium mr-1'>
+                                    {currency}
+                                </Text>
+                                <Ionicons name="chevron-down" size={16} color="#6B7280" />
+                            </TouchableOpacity>
                         </View>
                     </View>
 
@@ -333,7 +381,12 @@ const AddProductModal = ({
                                             borderWidth: selectedPayer?.accountId === member.accountId ? 2 : 0
                                         }}>
                                             <Image
-                                                source={{ uri: "https://static.vecteezy.com/system/resources/previews/014/169/701/original/trendy-bearded-man-vector.jpg" }}
+                                                source={
+                                                    member.email === 'huynhcongminhtri79@gmail.com' ? hcmt :
+                                                        member.email === 'hhuy00355@gmail.com' ? hhuy :
+                                                            member.email === 'trihcmse183799@fpt.edu.vn' ? trihcmse :
+                                                                paavagl
+                                                }
                                                 className='w-full h-full'
                                                 resizeMode='cover'
                                             />
@@ -403,7 +456,12 @@ const AddProductModal = ({
                                                 borderWidth: selected ? 2 : 0
                                             }}>
                                                 <Image
-                                                    source={{ uri: "https://static.vecteezy.com/system/resources/previews/014/169/701/original/trendy-bearded-man-vector.jpg" }}
+                                                    source={
+                                                        member.email === 'huynhcongminhtri79@gmail.com' ? hcmt :
+                                                            member.email === 'hhuy00355@gmail.com' ? hhuy :
+                                                                member.email === 'trihcmse183799@fpt.edu.vn' ? trihcmse :
+                                                                    paavagl
+                                                    }
                                                     className='w-full h-full'
                                                     resizeMode='cover'
                                                 />
@@ -502,6 +560,59 @@ const AddProductModal = ({
                         </TouchableOpacity>)}
                 </ScrollView>
             </View>
+
+            {/* Currency Picker Modal */}
+            {showCurrencyPicker && (
+                <View className='absolute inset-0 flex-1 justify-center items-center bg-black/60 z-60'>
+                    <View className='bg-white rounded-2xl p-6 mx-6 w-80'>
+                        <View className='flex-row items-center justify-between mb-4'>
+                            <Text className='text-lg font-bold text-gray-900'>Chọn tiền tệ</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowCurrencyPicker(false)}
+                                className='w-8 h-8 items-center justify-center bg-gray-100 rounded-full'
+                            >
+                                <Ionicons name='close' size={20} color='#6B7280' />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View className='gap-3'>
+                            {currencies.map((curr) => (
+                                <TouchableOpacity
+                                    key={curr.code}
+                                    onPress={() => {
+                                        setCurrency(curr.code);
+                                        setShowCurrencyPicker(false);
+                                    }}
+                                    className={`flex-row items-center p-4 rounded-xl border-2 ${currency === curr.code
+                                        ? 'bg-indigo-50 border-indigo-200'
+                                        : 'bg-gray-50 border-gray-200'
+                                        }`}
+                                >
+                                    <View className='w-12 h-12 bg-indigo-100 rounded-full items-center justify-center mr-4'>
+                                        <Text className='text-2xl'>{curr.symbol}</Text>
+                                    </View>
+                                    <View className='flex-1'>
+                                        <Text className={`font-bold text-base ${currency === curr.code ? 'text-indigo-900' : 'text-gray-900'
+                                            }`}>
+                                            {curr.code}
+                                        </Text>
+                                        <Text className={`text-sm ${currency === curr.code ? 'text-indigo-700' : 'text-gray-600'
+                                            }`}>
+                                            {curr.name}
+                                        </Text>
+                                    </View>
+                                    {currency === curr.code && (
+                                        <View className="w-6 h-6 bg-indigo-500 rounded-full items-center justify-center">
+                                            <Ionicons name='checkmark' size={14} color='#FFFFFF' />
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+                </View>
+            )}
+
             {/* Overlay chọn/chụp ảnh */}
             {showImagePicker && (
                 <View className='absolute inset-0 flex-1 justify-end bg-black/40 z-50'>

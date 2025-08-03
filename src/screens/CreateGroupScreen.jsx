@@ -18,14 +18,19 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import bg1 from '../../assets/images/bg1.png';
 import { StepSelector, AddMemberModal } from '../components';
+import { useAIChat } from '../contexts/AIChatContext';
 import { formatPrice } from '../utils/formatUtils';
 import axiosClient from '~/apis/axiosClient';
 import Toast from 'react-native-toast-message';
-
+import hcmt from '../../assets/images/hcmt.png';
+import hhuy from '../../assets/images/hhuy.webp';
+import trihcmse from '../../assets/images/trihcmse.webp';
+import paavagl from '../../assets/images/paavagl.webp';
 const { width, height } = Dimensions.get('window');
 
 const CreateGroupScreen = () => {
     const navigation = useNavigation();
+    const { toggleAIChat } = useAIChat();
     const [isLoading, setIsLoading] = useState(false);
     const [title, setTitle] = useState('');
     const [fromDate, setFromDate] = useState(new Date()); // Ngày hiện tại
@@ -74,79 +79,7 @@ const CreateGroupScreen = () => {
     const [members, setMembers] = useState([
     ]);
 
-    // State cho trưởng nhóm
-    const [groupLeader, setGroupLeader] = useState(null);
 
-    // State cho quy đổi tiền tệ
-    const [enableCurrencyConversion, setEnableCurrencyConversion] = useState(false);
-    const [fromCurrency, setFromCurrency] = useState('VND');
-    const [toCurrency, setToCurrency] = useState('USD');
-    const [showFromCurrencyPicker, setShowFromCurrencyPicker] = useState(false);
-    const [showToCurrencyPicker, setShowToCurrencyPicker] = useState(false);
-
-    // Danh sách các loại tiền tệ
-    const currencies = [
-        {
-            code: 'VND',
-            name: 'Việt Nam Đồng',
-            symbol: '₫',
-            flag: '🇻🇳'
-        },
-        {
-            code: 'USD',
-            name: 'Đô la Mỹ',
-            symbol: '$',
-            flag: '🇺🇸'
-        },
-        {
-            code: 'EUR',
-            name: 'Euro',
-            symbol: '€',
-            flag: '🇪🇺'
-        },
-        {
-            code: 'JPY',
-            name: 'Yên Nhật',
-            symbol: '¥',
-            flag: '🇯🇵'
-        },
-        {
-            code: 'GBP',
-            name: 'Bảng Anh',
-            symbol: '£',
-            flag: '🇬🇧'
-        },
-        {
-            code: 'AUD',
-            name: 'Đô la Úc',
-            symbol: 'A$',
-            flag: '🇦🇺'
-        },
-        {
-            code: 'CAD',
-            name: 'Đô la Canada',
-            symbol: 'C$',
-            flag: '🇨🇦'
-        },
-        {
-            code: 'CHF',
-            name: 'Franc Thụy Sĩ',
-            symbol: 'CHF',
-            flag: '🇨🇭'
-        },
-        {
-            code: 'CNY',
-            name: 'Nhân dân tệ',
-            symbol: '¥',
-            flag: '🇨🇳'
-        },
-        {
-            code: 'KRW',
-            name: 'Won Hàn Quốc',
-            symbol: '₩',
-            flag: '🇰🇷'
-        }
-    ];
 
     const handleBack = () => {
         navigation.goBack();
@@ -268,14 +201,6 @@ const CreateGroupScreen = () => {
     const handleGenerate = async () => {
         try {
             setIsLoading(true);
-            const fromCurrencyData = getSelectedFromCurrency();
-            const toCurrencyData = getSelectedToCurrency();
-            if (enableCurrencyConversion) {
-                console.log('Quy đổi tiền tệ:', `${fromCurrencyData?.name} → ${toCurrencyData?.name}`);
-                console.log('Tỷ giá:', getExchangeRate());
-            } else {
-                console.log('Quy đổi tiền tệ: Không sử dụng');
-            }
             if (members.length === 0) {
                 Toast.show({
                     type: 'error',
@@ -311,15 +236,8 @@ const CreateGroupScreen = () => {
                 setToDate(new Date());
                 setBudget('');
                 setMembers([]);
-                setGroupLeader(null);
-                setEnableCurrencyConversion(false);
-                setFromCurrency('VND');
-                setToCurrency('USD');
                 setShowAddMemberModal(false);
                 setIsSelectingLeader(false);
-                setShowFromCurrencyPicker(false);
-                setShowToCurrencyPicker(false);
-
             } else {
                 Toast.show({
                     type: 'error',
@@ -389,60 +307,6 @@ const CreateGroupScreen = () => {
         setAvailableMembers(prevAvailable => [...prevAvailable, availableMember]);
     };
 
-    const handleFromCurrencyChange = (currencyCode) => {
-        setFromCurrency(currencyCode);
-
-        // Nếu chọn trùng với toCurrency, tự động đổi toCurrency sang VND hoặc USD
-        if (currencyCode === toCurrency) {
-            setToCurrency(currencyCode === 'VND' ? 'USD' : 'VND');
-        }
-
-        setShowFromCurrencyPicker(false);
-    };
-
-    const handleToCurrencyChange = (currencyCode) => {
-        setToCurrency(currencyCode);
-
-        // Nếu chọn trùng với fromCurrency, tự động đổi fromCurrency sang VND hoặc USD
-        if (currencyCode === fromCurrency) {
-            setFromCurrency(currencyCode === 'VND' ? 'USD' : 'VND');
-        }
-
-        setShowToCurrencyPicker(false);
-    };
-
-    const handleSwapCurrencies = () => {
-        const temp = fromCurrency;
-        setFromCurrency(toCurrency);
-        setToCurrency(temp);
-    };
-
-    const getSelectedFromCurrency = () => {
-        return currencies.find(currency => currency.code === fromCurrency);
-    };
-
-    const getSelectedToCurrency = () => {
-        return currencies.find(currency => currency.code === toCurrency);
-    };
-
-    const getExchangeRate = () => {
-        // Mock exchange rates - có thể kết nối API thực tế
-        const rates = {
-            'VND_USD': '1 USD ≈ 24,000 VND',
-            'USD_VND': '1 USD ≈ 24,000 VND',
-            'VND_EUR': '1 EUR ≈ 26,000 VND',
-            'EUR_VND': '1 EUR ≈ 26,000 VND',
-            'VND_JPY': '1 JPY ≈ 160 VND',
-            'JPY_VND': '1 JPY ≈ 160 VND',
-            'VND_GBP': '1 GBP ≈ 30,000 VND',
-            'GBP_VND': '1 GBP ≈ 30,000 VND',
-            'VND_VND': '1 VND = 1 VND',
-            'USD_EUR': '1 USD ≈ 0.92 EUR',
-            'EUR_USD': '1 EUR ≈ 1.08 USD'
-        };
-        return rates[`${fromCurrency}_${toCurrency}`] || 'Tỷ giá không có sẵn';
-    };
-
     const fetchUserData = async () => {
         try {
             setIsLoading(true);
@@ -496,92 +360,149 @@ const CreateGroupScreen = () => {
             setAvailableMembers(filteredMembers);
         }
     }, [user, members]);
-
+    console.log(members);
     return (
-        <View className='flex-1 bg-bg-default relative'>
-
-            <View
-                className='absolute bottom-0 left-0 right-0'
-                style={{ zIndex: 0 }}
-            >
+        <View className='flex-1  bg-bg-default'>
+            <StatusBar barStyle="light-content" />
+            <View className="absolute bottom-0 left-0 right-0" style={{ zIndex: 0 }}>
                 <Image
                     source={bg1}
                     style={{
                         width: width,
                         height: height * 0.8,
-                        transform: [{ translateY: -height * 0 }]
+                        opacity: 1,
+                        transform: [{ translateY: -height * 0.1 }],
+
                     }}
-                    resizeMode='cover'
+                    resizeMode="cover"
                 />
             </View>
-
-            {/* Header */}
-            <View
-                className='flex-row items-center px-4 pt-10 pb-4'
-                style={{ zIndex: 1 }}
+            {/* Modern Gradient Header */}
+            <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    paddingTop: 50,
+                    paddingBottom: 25,
+                    paddingHorizontal: 20,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    elevation: 8,
+                }}
             >
-                <TouchableOpacity
-                    onPress={handleBack}
-                    className='flex-row items-center p-3'
-                >
-                    <Ionicons
-                        name='chevron-back-outline'
-                        size={28}
-                        color='#6C63FF'
-                        style={{ marginRight: 10 }}
-                    />
-                    <Text className='text-2xl font-bold text-text-title '>
-                        Tạo Nhóm
-                    </Text>
-                </TouchableOpacity>
-            </View>
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <TouchableOpacity
+                            onPress={handleBack}
+                            className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm items-center justify-center mr-4"
+                            style={{
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
+                            }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <View>
+                            <Text className="text-white text-2xl font-bold">Tạo nhóm</Text>
+                            <Text className="text-white/80 text-sm mt-1">Thiết lập chuyến đi mới</Text>
+                        </View>
+                    </View>
+                </View>
+            </LinearGradient>
 
-            <ScrollView className='flex-1 px-6' contentContainerStyle={{ paddingBottom: 30 }}>
 
-                {/* Tên nhóm */}
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Tên nhóm
-                    </Text>
+            <ScrollView
+                className='flex-1 px-5'
+                contentContainerStyle={{ paddingBottom: 30, paddingTop: 20 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Group Name Card */}
+                <View className='mb-6 bg-white rounded-3xl p-6 shadow-sm' style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 8,
+                    elevation: 3,
+                }}>
+                    <View className="flex-row items-center mb-4">
+                        <View className="w-10 h-10 bg-purple-100 rounded-2xl items-center justify-center mr-3">
+                            <Ionicons name="people" size={20} color="#667eea" />
+                        </View>
+                        <Text className='text-lg font-bold text-gray-900'>
+                            Tên nhóm
+                        </Text>
+                    </View>
                     <TextInput
                         value={title}
                         onChangeText={setTitle}
-                        placeholder='Nhập tên nhóm'
-                        placeholderTextColor="#9CA3AF"
-                        className='bg-white rounded-xl px-4 py-4 text-2xl text-gray-900 font-bold shadow-sm'
-
+                        placeholder='Nhập tên nhóm của bạn'
+                        placeholderTextColor='#9CA3AF'
+                        className='bg-gray-50 rounded-2xl px-4 py-4 text-base text-gray-900 font-medium'
+                        style={{
+                            fontSize: 16,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB',
+                        }}
                     />
                 </View>
 
-                {/* Thời gian */}
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Thời gian
-                    </Text>
+                {/* Time Period Card */}
+                <View className='mb-6 bg-white rounded-3xl p-6 shadow-sm' style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 8,
+                    elevation: 3,
+                }}>
+                    <View className="flex-row items-center mb-4">
+                        <View className="w-10 h-10 bg-blue-100 rounded-2xl items-center justify-center mr-3">
+                            <Ionicons name="calendar" size={20} color="#3B82F6" />
+                        </View>
+                        <Text className='text-lg font-bold text-gray-900'>
+                            Thời gian chuyến đi
+                        </Text>
+                    </View>
 
-                    <View className='flex-row gap-4' >
+                    <View className='flex-row gap-4'>
                         <TouchableOpacity
                             onPress={() => openPicker('fromDate')}
-                            className='flex-1 bg-white rounded-xl px-4 py-4 shadow-sm'
-
+                            className='flex-1 bg-gray-50 rounded-2xl px-4 py-4'
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#E5E7EB',
+                            }}
                         >
-                            <Text className='text-xs text-gray-500 mb-1'>Từ ngày</Text>
-                            <Text className='text-primary font-medium'>
-                                {formatDate(fromDate)}
-                            </Text>
+                            <Text className='text-xs text-gray-500 mb-2 font-medium'>Từ ngày</Text>
+                            <View className="flex-row items-center">
+                                <Ionicons name="calendar-outline" size={16} color="#667eea" style={{ marginRight: 8 }} />
+                                <Text className='text-purple-600 font-semibold text-base'>
+                                    {formatDate(fromDate)}
+                                </Text>
+                            </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity
                             onPress={() => openPicker('toDate')}
-                            className='flex-1 bg-white rounded-xl px-4 py-4 shadow-sm'
-
+                            className='flex-1 bg-gray-50 rounded-2xl px-4 py-4'
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#E5E7EB',
+                            }}
                         >
-                            <Text className='text-xs text-gray-500 mb-1'>Đến ngày</Text>
-                            <Text className='text-primary font-medium'>
-                                {formatDate(toDate)}
-                            </Text>
+                            <Text className='text-xs text-gray-500 mb-2 font-medium'>Đến ngày</Text>
+                            <View className="flex-row items-center">
+                                <Ionicons name="calendar-outline" size={16} color="#667eea" style={{ marginRight: 8 }} />
+                                <Text className='text-purple-600 font-semibold text-base'>
+                                    {formatDate(toDate)}
+                                </Text>
+                            </View>
                             {toDate < fromDate && (
-                                <Text className='text-red-500 text-xs mt-1'>
+                                <Text className='text-red-500 text-xs mt-2 font-medium'>
                                     Đến ngày phải sau từ ngày
                                 </Text>
                             )}
@@ -589,152 +510,157 @@ const CreateGroupScreen = () => {
                     </View>
                 </View>
 
-                {/* Budget */}
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Ngân sách dự kiến
-                    </Text>
+                {/* Budget Card */}
+                <View className='mb-6 bg-white rounded-3xl p-6 shadow-sm' style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 8,
+                    elevation: 3,
+                }}>
+                    <View className="flex-row items-center mb-4">
+                        <View className="w-10 h-10 bg-green-100 rounded-2xl items-center justify-center mr-3">
+                            <Ionicons name="wallet" size={20} color="#10B981" />
+                        </View>
+                        <Text className='text-lg font-bold text-gray-900'>
+                            Ngân sách dự kiến
+                        </Text>
+                    </View>
                     <TextInput
                         value={budget}
                         onChangeText={handleBudgetChange}
                         placeholder='VD: 5,000,000'
                         keyboardType='numeric'
-                        placeholderTextColor="#9CA3AF"
-                        className='bg-white rounded-xl px-4 py-4 text-base text-gray-900 shadow-sm'
+                        placeholderTextColor='#9CA3AF'
+                        className='bg-gray-50 rounded-2xl px-4 py-4 text-base text-gray-900 font-medium'
+                        style={{
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB',
+                        }}
                     />
-
-                    <Text className='text-xs text-gray-500 mt-2'>
+                    <Text className='text-sm text-gray-500 mt-3 font-medium'>
                         Nhập số tiền dự kiến cho chuyến đi (không bắt buộc)
                     </Text>
                 </View>
 
-                {/* Quy đổi tiền tệ */}
-                <View className="mb-6">
-                    <View className="flex-row items-center justify-between mb-3">
-                        <Text className="text-base font-medium text-gray-900">
-                            Quy đổi tiền tệ
-                        </Text>
 
-                        <Switch
-                            value={enableCurrencyConversion}
-                            onValueChange={setEnableCurrencyConversion}
-                            trackColor={{ false: '#D1D5DB', true: '#6366F1' }}
-                            thumbColor="#fff"
-                        />
+
+
+                {/* Members Card */}
+                <View className='mb-8 bg-white rounded-3xl p-6 shadow-sm' style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 8,
+                    elevation: 3,
+                }}>
+                    <View className="flex-row items-center mb-5">
+                        <View className="w-10 h-10 bg-pink-100 rounded-2xl items-center justify-center mr-3">
+                            <Ionicons name="person-add" size={20} color="#EC4899" />
+                        </View>
+                        <View className="flex-1">
+                            <Text className='text-lg font-bold text-gray-900'>
+                                Mời thành viên
+                            </Text>
+                            <Text className='text-sm text-gray-500 font-medium'>
+                                {members.length} thành viên được chọn
+                            </Text>
+                        </View>
                     </View>
 
-                    {enableCurrencyConversion && (
-                        <>
-                            <View className="flex-row items-center gap-4">
-                                {/* From Currency */}
-                                <TouchableOpacity
-                                    onPress={() => setShowFromCurrencyPicker(true)}
-                                    className="flex-1 bg-white rounded-xl px-4 py-4 shadow-md"
-                                >
-                                    <Text className="text-xs text-gray-500 mb-1">Từ</Text>
-                                    <View className="flex-row items-center">
-                                        <Text className="text-lg mr-2">{getSelectedFromCurrency()?.flag}</Text>
-                                        <View className="flex-1">
-                                            <Text className="text-base font-medium text-gray-900">
-                                                {getSelectedFromCurrency()?.code}
-                                            </Text>
-                                            <Text className="text-xs text-gray-500" numberOfLines={1}>
-                                                {getSelectedFromCurrency()?.name}
-                                            </Text>
-                                        </View>
-                                        <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
-                                    </View>
-                                </TouchableOpacity>
-
-                                {/* Swap Button */}
-                                <TouchableOpacity
-                                    onPress={handleSwapCurrencies}
-                                    className="w-12 h-12 bg-blue-100 rounded-full items-center justify-center"
-                                >
-                                    <Ionicons name="swap-horizontal" size={20} color="#6C63FF" />
-                                </TouchableOpacity>
-
-                                {/* To Currency */}
-                                <TouchableOpacity
-                                    onPress={() => setShowToCurrencyPicker(true)}
-                                    className="flex-1 bg-white rounded-xl px-4 py-4 shadow-md"
-                                >
-                                    <Text className="text-xs text-gray-500 mb-1">Sang</Text>
-                                    <View className="flex-row items-center">
-                                        <Text className="text-lg mr-2">{getSelectedToCurrency()?.flag}</Text>
-                                        <View className="flex-1">
-                                            <Text className="text-base font-medium text-gray-900">
-                                                {getSelectedToCurrency()?.code}
-                                            </Text>
-                                            <Text className="text-xs text-gray-500" numberOfLines={1}>
-                                                {getSelectedToCurrency()?.name}
-                                            </Text>
-                                        </View>
-                                        <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
-                                    </View>
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Exchange Rate */}
-                            <View className="mt-3 p-3 bg-blue-50 rounded-lg">
-                                <Text className="text-xs text-primary text-center">
-                                    Tỷ giá: {getExchangeRate()}
-                                </Text>
-                            </View>
-                        </>
-                    )}
-                </View>
-
-
-                {/* Mời thành viên */}
-                <View className='mb-8'>
-                    <Text className='text-base font-medium text-gray-900 mb-4'>
-                        Mời thành viên
-                    </Text>
-
                     <View className='flex-row flex-wrap' style={{ gap: 16 }}>
-                        {/* Hiển thị các thành viên hiện tại */}
                         {members.map((member, index) => (
                             <TouchableOpacity
                                 key={member.accountId}
                                 className='relative'
                                 onPress={() => handleRemoveMember(member.accountId)}
+                                style={{
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.1,
+                                    shadowRadius: 4,
+                                }}
                             >
-                                <View className='w-14 h-14 rounded-full overflow-hidden'
-                                    style={{ backgroundColor: '#4A5568' }}>
+                                <View className='w-16 h-16 rounded-3xl overflow-hidden bg-gradient-to-br from-purple-400 to-pink-400'>
                                     <Image
-                                        source={{ uri: "https://tse1.mm.bing.net/th/id/OIP.-DonqiW8gRye2uR_9F6qYAHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" }}
-                                        className='w-full h-full'
+                                        source={
+                                            member.email === 'paavagl19' ? paavagl :
+                                                member.email === 'hhuy00355' ? hhuy :
+                                                    member.email === 'trihcmse183799' ? trihcmse :
+                                                        hcmt
+                                        }
+                                        style={{
+                                            width: '100%',
+                                            height: '100%'
+                                        }}
                                         resizeMode='cover'
                                     />
                                 </View>
-                                {member.accountId !== user?.accountId && (<View className='absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full items-center justify-center border border-white'>
-                                    <Text className='text-white text-xs font-bold'>-</Text>
-                                </View>)}
+                                {member.accountId !== user?.accountId && (
+                                    <View className='absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full items-center justify-center border-2 border-white' style={{
+                                        shadowColor: '#EF4444',
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.3,
+                                        shadowRadius: 4,
+                                    }}>
+                                        <Ionicons name="remove" size={12} color="white" />
+                                    </View>
+                                )}
+                                {member.accountId === user?.accountId && (
+                                    <View className='absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full items-center justify-center border-2 border-white' style={{
+                                        shadowColor: '#10B981',
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.3,
+                                        shadowRadius: 4,
+                                    }}>
+                                        <Ionicons name="checkmark" size={12} color="white" />
+                                    </View>
+                                )}
                             </TouchableOpacity>
                         ))}
 
-                        {/* Nút Add Member */}
                         <TouchableOpacity
                             onPress={handleAddMember}
-                            className='w-14 h-14 rounded-full border-2 border-dashed border-gray-400 items-center justify-center bg-gray-50'
+                            className='w-16 h-16 rounded-3xl border-2 border-dashed border-gray-300 items-center justify-center bg-gray-50'
+                            style={{
+                                borderColor: '#667eea',
+                                backgroundColor: '#f8faff',
+                            }}
                         >
-                            <Text className='text-gray-400 text-2xl font-light'>+</Text>
+                            <Ionicons name="add" size={24} color="#667eea" />
                         </TouchableOpacity>
+
                     </View>
                 </View>
 
+                {/* Create Group Button */}
                 <TouchableOpacity
                     onPress={handleGenerate}
-                    className='bg-primary py-4 rounded-2xl mb-8'
+                    disabled={isLoading}
+                    style={{
+                        shadowColor: '#667eea',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: 8,
+                        borderRadius: 24,
+                    }}
                 >
-                    <View className='flex-row items-center justify-center'>
-                        <Text className='text-text-button text-center text-lg font-bold mr-1'>
-                            TẠO NHÓM
-                        </Text>
-                        <Ionicons name='chevron-forward-outline' size={20} color='#FFFFFF' />
-                    </View>
+                    <LinearGradient
+                        colors={['#667eea', '#764ba2']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{
+                            borderRadius: 12,
+                        }}
+                    >
+                        <View className='flex-row items-center justify-center'>
 
+                            <Text className='text-white font-semibold py-4 text-base'>
+                                TẠO NHÓM
+                            </Text>
+                        </View>
+                    </LinearGradient>
                 </TouchableOpacity>
             </ScrollView>
 
@@ -809,150 +735,6 @@ const CreateGroupScreen = () => {
                 selectedMembers={members}
                 isSelectingLeader={isSelectingLeader}
             />
-
-            {/* From Currency Picker Modal */}
-            {showFromCurrencyPicker && enableCurrencyConversion && (
-                <View className='absolute inset-0 bg-black/40 bg-opacity-50 flex-1 justify-end' style={{ zIndex: 1000 }}>
-                    <View
-                        className='bg-white rounded-t-3xl'
-                        style={{
-                            height: height * 0.6,
-                            paddingTop: Platform.OS === 'ios' ? 20 : 15
-                        }}
-                    >
-                        {/* Header */}
-                        <View className='flex-row items-center justify-between px-6 pb-4'>
-                            <View className='w-8' />
-                            <Text className='text-lg font-bold text-gray-900'>
-                                Chọn tiền tệ gốc
-                            </Text>
-                            <TouchableOpacity onPress={() => setShowFromCurrencyPicker(false)} className='p-2'>
-                                <Ionicons name='close' size={24} color='#6B7280' />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Currency List */}
-                        <ScrollView
-                            className='flex-1 px-6'
-                            showsVerticalScrollIndicator={false}
-                        >
-                            {currencies.map((currency) => {
-                                const isDisabled = currency.code === toCurrency;
-                                return (
-                                    <TouchableOpacity
-                                        key={currency.code}
-                                        onPress={() => !isDisabled && handleFromCurrencyChange(currency.code)}
-                                        className={`flex-row items-center py-4 px-4 rounded-xl mb-3 ${fromCurrency === currency.code
-                                            ? 'bg-blue-50 border-2 border-blue-200'
-                                            : isDisabled
-                                                ? 'bg-gray-100 border border-gray-200 opacity-50'
-                                                : 'bg-gray-50 border border-gray-200'
-                                            }`}
-                                        disabled={isDisabled}
-                                    >
-                                        <Text className='text-2xl mr-4'>{currency.flag}</Text>
-                                        <View className='flex-1'>
-                                            <Text className={`font-semibold text-base ${fromCurrency === currency.code
-                                                ? 'text-blue-900'
-                                                : isDisabled
-                                                    ? 'text-gray-400'
-                                                    : 'text-gray-900'
-                                                }`}>
-                                                {currency.code} - {currency.name}
-                                            </Text>
-                                            <Text className={`text-sm ${fromCurrency === currency.code
-                                                ? 'text-blue-700'
-                                                : isDisabled
-                                                    ? 'text-gray-400'
-                                                    : 'text-gray-600'
-                                                }`}>
-                                                {isDisabled ? 'Đã chọn làm tiền tệ đích' : `Ký hiệu: ${currency.symbol}`}
-                                            </Text>
-                                        </View>
-                                        {fromCurrency === currency.code && (
-                                            <Ionicons name='checkmark-circle' size={24} color='#6C63FF' />
-                                        )}
-                                        {isDisabled && (
-                                            <Ionicons name='ban' size={24} color='#9CA3AF' />
-                                        )}
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </ScrollView>
-                    </View>
-                </View>
-            )}
-            {showToCurrencyPicker && enableCurrencyConversion && (
-                <View className='absolute inset-0 bg-black/40 bg-opacity-50 flex-1 justify-end' style={{ zIndex: 1000 }}>
-                    <View
-                        className='bg-white rounded-t-3xl'
-                        style={{
-                            height: height * 0.6,
-                            paddingTop: Platform.OS === 'ios' ? 20 : 15
-                        }}
-                    >
-                        {/* Header */}
-                        <View className='flex-row items-center justify-between px-6 pb-4'>
-                            <View className='w-8' />
-                            <Text className='text-lg font-bold text-gray-900'>
-                                Chọn tiền tệ đích
-                            </Text>
-                            <TouchableOpacity onPress={() => setShowToCurrencyPicker(false)} className='p-2'>
-                                <Ionicons name='close' size={24} color='#6B7280' />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Currency List */}
-                        <ScrollView
-                            className='flex-1 px-6'
-                            showsVerticalScrollIndicator={false}
-                        >
-                            {currencies.map((currency) => {
-                                const isDisabled = currency.code === fromCurrency;
-                                return (
-                                    <TouchableOpacity
-                                        key={currency.code}
-                                        onPress={() => !isDisabled && handleToCurrencyChange(currency.code)}
-                                        className={`flex-row items-center py-4 px-4 rounded-xl mb-3 ${toCurrency === currency.code
-                                            ? 'bg-blue-50 border-2 border-blue-200'
-                                            : isDisabled
-                                                ? 'bg-gray-100 border border-gray-200 opacity-50'
-                                                : 'bg-gray-50 border border-gray-200'
-                                            }`}
-                                        disabled={isDisabled}
-                                    >
-                                        <Text className='text-2xl mr-4'>{currency.flag}</Text>
-                                        <View className='flex-1'>
-                                            <Text className={`font-semibold text-base ${toCurrency === currency.code
-                                                ? 'text-blue-900'
-                                                : isDisabled
-                                                    ? 'text-gray-400'
-                                                    : 'text-gray-900'
-                                                }`}>
-                                                {currency.code} - {currency.name}
-                                            </Text>
-                                            <Text className={`text-sm ${toCurrency === currency.code
-                                                ? 'text-blue-700'
-                                                : isDisabled
-                                                    ? 'text-gray-400'
-                                                    : 'text-gray-600'
-                                                }`}>
-                                                {isDisabled ? 'Đã chọn làm tiền tệ gốc' : `Ký hiệu: ${currency.symbol}`}
-                                            </Text>
-                                        </View>
-                                        {toCurrency === currency.code && (
-                                            <Ionicons name='checkmark-circle' size={24} color='#6C63FF' />
-                                        )}
-                                        {isDisabled && (
-                                            <Ionicons name='ban' size={24} color='#9CA3AF' />
-                                        )}
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </ScrollView>
-                    </View>
-                </View>
-            )}
         </View>
     );
 };

@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosClient from '../apis/axiosClient';
 import { addAuth } from '../reduxs/reducers/authReducer';
 import { useAuthLogic } from '../utils/authLogic';
+import { useAIChat } from '../contexts/AIChatContext';
 import bg1 from '../../assets/images/bg1.png';
 import googleIcon from '../../assets/images/gg.png';
 import facebookIcon from '../../assets/images/fb.png';
@@ -37,6 +38,7 @@ const { width, height } = Dimensions.get('window');
 const LoginScreen = () => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
+    const { updateLoginStatus } = useAIChat();
     const { isFirstTimeUse, setFirstTimeUsed } = useAuthLogic();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -110,6 +112,10 @@ const LoginScreen = () => {
                     text2: `Chào mừng ${username} quay lại!`,
                     position: 'top'
                 });
+
+                // Cập nhật trạng thái AI chat khi đăng nhập thành công
+                updateLoginStatus(true);
+
                 navigation.navigate('HomeTabs')
             } else {
                 Toast.show({

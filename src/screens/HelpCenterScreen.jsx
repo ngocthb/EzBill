@@ -168,7 +168,7 @@ const HelpCenterScreen = () => {
     );
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <View className="flex-1 bg-bg-default">
             <StatusBar backgroundColor="#667eea" barStyle="light-content" />
 
             <View
@@ -191,10 +191,12 @@ const HelpCenterScreen = () => {
                 colors={['#667eea', '#764ba2']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                className="px-6 pt-4 pb-6"
                 style={{
                     borderBottomLeftRadius: 30,
-                    borderBottomRightRadius: 30
+                    borderBottomRightRadius: 30,
+                    paddingTop: 50,
+                    paddingBottom: 20,
+                    paddingHorizontal: 20,
                 }}
             >
                 <View className="flex-row items-center justify-between mb-6">
@@ -408,7 +410,7 @@ const HelpCenterScreen = () => {
                     </View>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };
 

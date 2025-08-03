@@ -5,10 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 
 import {
   HomeScreen,
-  ExploreScreen,
+
   NotificationScreen,
   AccountScreen,
-  CreateGroup
+
+  AllGroupsScreen
 } from '../screens';
 import { useNavigation } from '@react-navigation/native';
 
@@ -54,7 +55,7 @@ const HomeTabs = () => {
         }}
       >
         <BottomTabs.Screen
-          name="Home"
+          name="Trang chủ"
           component={HomeScreen}
           options={{
             tabBarIcon: ({ color, focused }) => (
@@ -70,13 +71,13 @@ const HomeTabs = () => {
         />
 
         <BottomTabs.Screen
-          name="Ez AI"
-          component={ExploreScreen}
+          name="Nhóm"
+          component={AllGroupsScreen}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <View className={`items-center ${focused ? 'scale-110' : ''}`}>
                 <Ionicons
-                  name={focused ? "logo-octocat" : "logo-octocat"}
+                  name={focused ? "people-circle" : "people-circle-outline"}
                   size={24}
                   color={color}
                 />
@@ -106,7 +107,7 @@ const HomeTabs = () => {
         />
 
         <BottomTabs.Screen
-          name="Notification"
+          name="Thông báo"
           component={NotificationScreen}
           options={{
             tabBarIcon: ({ color, focused }) => (
@@ -122,7 +123,7 @@ const HomeTabs = () => {
         />
 
         <BottomTabs.Screen
-          name="Account"
+          name="Tài khoản"
           component={AccountScreen}
           options={{
             tabBarIcon: ({ color, focused }) => (

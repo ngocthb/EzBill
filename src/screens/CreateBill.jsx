@@ -23,7 +23,11 @@ import { useRoute } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import axiosClient from '~/apis/axiosClient';
 import Notfound from '~/components/Notfound';
-
+import { LinearGradient } from 'expo-linear-gradient';
+import hcmt from '../../assets/images/hcmt.png';
+import hhuy from '../../assets/images/hhuy.webp';
+import trihcmse from '../../assets/images/trihcmse.webp';
+import paavagl from '../../assets/images/paavagl.webp';
 const { width, height } = Dimensions.get('window');
 
 const CreateBill = () => {
@@ -104,7 +108,7 @@ const CreateBill = () => {
         }
             , [])
     );
-
+    console.log('bills', bills[0]);
     return (
         <View className='flex-1 bg-bg-default relative' >
             <View
@@ -121,31 +125,49 @@ const CreateBill = () => {
                     resizeMode='cover'
                 />
             </View>
-            {/* Header */}
-            <View className='flex-row items-center justify-between px-4 pt-12 pb-4 bg-white shadow-sm'>
-                <TouchableOpacity
-                    onPress={handleBack}
-                    className='p-2'
-                >
-                    <Ionicons name='chevron-back-outline' size={28} color='#6C63FF' />
-                </TouchableOpacity>
 
-                <Text className='text-xl font-bold text-gray-900'>
-                    Hóa đơn
-                </Text>
-
-
-                <TouchableOpacity
-                    onPress={() => navigation.navigate('ScanBill')}
-                    className='p-2 bg-purple-100 rounded-lg'
-                >
-                    <Ionicons
-                        name='scan'
-                        size={20}
-                        color='#6C63FF'
-                    />
-                </TouchableOpacity>
-            </View>
+            <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    paddingTop: 50,
+                    paddingBottom: 25,
+                    paddingHorizontal: 20,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    elevation: 8,
+                }}
+            >
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <TouchableOpacity
+                            onPress={() => navigation.goBack()}
+                            className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm items-center justify-center mr-4"
+                            style={{
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
+                            }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <View>
+                            <Text className="text-white text-2xl font-bold">Tạo hóa đơn</Text>
+                            <Text className="text-white/80 text-sm mt-1">Thêm hóa đơn mới</Text>
+                        </View>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("ScanBill", { tripId })}
+                        className="px-4 py-2 bg-white/20 rounded-xl backdrop-blur-sm"
+                    >
+                        <Text className="text-white font-medium text-sm">Scan hóa đơn</Text>
+                    </TouchableOpacity>
+                </View>
+            </LinearGradient >
             <View className='flex-1 px-4 pt-4 pb-4'>
                 {/* Products List */}
                 <ScrollView
@@ -194,7 +216,12 @@ const CreateBill = () => {
                                                     {bill?.beneficiaries?.slice(0, 2).map((user, index) => (
                                                         <Image
                                                             key={user.accountId}
-                                                            source={{ uri: "https://static.vecteezy.com/system/resources/previews/002/275/847/original/male-avatar-profile-icon-of-smiling-caucasian-man-vector.jpg" }}
+                                                            source={
+                                                                user.accountId === 'ccb3ef34-021f-4f54-9007-2fd47fffdb1d' ? hcmt :
+                                                                    user.accountId === 'cf0ab205-f29e-4fa8-b182-7c38262a5281' ? accountId :
+                                                                        user.accountId === '2179fd2a-fc41-4baa-882a-fe27e4b16d0b' ? trihcmse :
+                                                                            paavagl
+                                                            }
                                                             className={`w-5 h-5 rounded-full ${index > 0 ? '-ml-1' : ''}`}
                                                             style={{
                                                                 zIndex: 2 - index,
@@ -202,6 +229,7 @@ const CreateBill = () => {
                                                                 borderColor: '#6C63FF'
                                                             }}
                                                         />
+
                                                     ))}
                                                     {bill?.beneficiaries?.length > 2 && (
                                                         <View
@@ -225,7 +253,12 @@ const CreateBill = () => {
                                                 />
                                             </TouchableOpacity>
                                             <Image
-                                                source={{ uri: "https://static.vecteezy.com/system/resources/previews/014/169/701/original/trendy-bearded-man-vector.jpg" }}
+                                                source={
+                                                    bill?.paidBy === 'ccb3ef34-021f-4f54-9007-2fd47fffdb1d' ? hcmt :
+                                                        bill?.paidBy === 'cf0ab205-f29e-4fa8-b182-7c38262a5281' ? hhuy :
+                                                            bill?.paidBy === '2179fd2a-fc41-4baa-882a-fe27e4b16d0b' ? trihcmse :
+                                                                paavagl
+                                                }
                                                 className='w-6 h-6 rounded-full'
                                             />
                                         </View>
@@ -259,9 +292,12 @@ const CreateBill = () => {
                                                 return (
                                                     <View key={member.accountId} className="flex-col items-center justify-center">
                                                         <Image
-                                                            source={{
-                                                                uri: "https://static.vecteezy.com/system/resources/previews/002/275/847/original/male-avatar-profile-icon-of-smiling-caucasian-man-vector.jpg",
-                                                            }}
+                                                            source={
+                                                                member.accountId === 'ccb3ef34-021f-4f54-9007-2fd47fffdb1d' ? hcmt :
+                                                                    member.accountId === 'cf0ab205-f29e-4fa8-b182-7c38262a5281' ? hhuy :
+                                                                        member.accountId === '2179fd2a-fc41-4baa-882a-fe27e4b16d0b' ? trihcmse :
+                                                                            paavagl
+                                                            }
                                                             className="w-12 h-12 rounded-full border-2 border-blue-600"
                                                         />
                                                         <Text className="text-xs mt-1 text-purple-600 font-medium">
@@ -358,8 +394,13 @@ const CreateBill = () => {
                                                 <View key={index} className='flex-row items-center justify-between py-2 px-1'>
                                                     <View className='flex-row items-center'>
                                                         <Image
-                                                            source={{ uri: "https://icon-library.com/images/avatar-icon/avatar-icon-5.jpg" }}
-                                                            className='w-7 h-7 rounded-full mr-3'
+                                                            source={
+                                                                payment.payer === 'huynhcongminhtri79@gmail.com' ? hcmt :
+                                                                    payment.payer === 'hhuy00355@gmail.com' ? hhuy :
+                                                                        payment.payer === 'trihcmse183799@fpt.edu.vn' ? trihcmse :
+                                                                            paavagl
+                                                            }
+                                                            className='w-7 h-7 rounded-fpaymentull mr-3'
                                                             style={{
                                                                 backgroundColor: '#E5E7EB'
                                                             }}
@@ -400,7 +441,7 @@ const CreateBill = () => {
 
 
 
-        </View>
+        </View >
     );
 }
 

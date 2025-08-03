@@ -15,7 +15,10 @@ import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import axiosClient from '../apis/axiosClient';
 import { formatPrice, parseFormattedPrice, formatDateToISO, truncateText } from '../utils/formatUtils';
-
+import hcmt from '../../assets/images/hcmt.png';
+import hhuy from '../../assets/images/hhuy.webp';
+import trihcmse from '../../assets/images/trihcmse.webp';
+import paavagl from '../../assets/images/paavagl.webp';
 const AddTaxRefundModal = ({
     visible,
     onClose,
@@ -224,7 +227,12 @@ const AddTaxRefundModal = ({
                                             }}
                                         >
                                             <Image
-                                                source={{ uri: "https://icon0.com/free/static2/preview2/stock-photo-girl-icon--36502.jpg" }}
+                                                source={
+                                                    member.email === 'huynhcongminhtri79@gmail.com' ? hcmt :
+                                                        member.email === 'hhuy00355@gmail.com' ? hhuy :
+                                                            member.email === 'trihcmse183799@fpt.edu.vn' ? trihcmse :
+                                                                paavagl
+                                                }
                                                 className='w-full h-full'
                                                 resizeMode='cover'
                                             />
@@ -289,7 +297,12 @@ const AddTaxRefundModal = ({
                                                     }}
                                                 >
                                                     <Image
-                                                        source={{ uri: "https://icon0.com/free/static2/preview2/stock-photo-girl-icon--36502.jpg" }}
+                                                        source={
+                                                            member.email === 'huynhcongminhtri79@gmail.com' ? hcmt :
+                                                                member.email === 'hhuy00355@gmail.com' ? hhuy :
+                                                                    member.email === 'trihcmse183799@fpt.edu.vn' ? trihcmse :
+                                                                        paavagl
+                                                        }
                                                         className='w-full h-full'
                                                         resizeMode='cover'
                                                     />

@@ -188,22 +188,50 @@ const TaxRefundScreen = () => {
                     style={{
                         width: width,
                         height: height * 0.8,
-                        opacity: 0.05,
+
                         transform: [{ translateY: -height * 0.1 }]
                     }}
                     resizeMode="cover"
                 />
             </View>
             {/* Header */}
-            <View className='flex-row items-center justify-between px-4 pt-12 pb-4 bg-white shadow-sm'>
-                <TouchableOpacity onPress={() => navigation.goBack()} className='p-2'>
-                    <Ionicons name='chevron-back-outline' size={28} color='#6C63FF' />
-                </TouchableOpacity>
-                <Text className='text-xl font-bold text-gray-900'>Hoàn thuế</Text>
-                <TouchableOpacity onPress={handleOpenModal} className='p-2'>
-                    <Ionicons name='add-outline' size={28} color='#6C63FF' />
-                </TouchableOpacity>
-            </View>
+            <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    paddingTop: 50,
+                    paddingBottom: 25,
+                    paddingHorizontal: 20,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    elevation: 8,
+                }}
+            >
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <TouchableOpacity
+                            onPress={() => navigation.goBack()}
+                            className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm items-center justify-center mr-4"
+                            style={{
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
+                            }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <View>
+                            <Text className="text-white text-2xl font-bold">Hoàn thuế</Text>
+                            <Text className="text-white/80 text-sm mt-1">Tính toán chi phí của bạn</Text>
+                        </View>
+                    </View>
+                </View>
+            </LinearGradient>
+
 
             {/* Content */}
             <FlatList

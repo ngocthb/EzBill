@@ -88,7 +88,7 @@ const AllGroupsScreen = () => {
             const userData = await fetchUserData();
 
             if (userData) {
-                const groupRes = await axiosClient.get(`account/${userData.accountId}`);
+                const groupRes = await axiosClient.get(`trip/account/${userData.accountId}`);
                 if (groupRes.status === 200) {
                     const sortedGroups = groupRes.data.sort((a, b) => {
                         return new Date(b.startDate) - new Date(a.startDate);
@@ -258,7 +258,7 @@ const AllGroupsScreen = () => {
     );
 
     return (
-        <View className="flex-1 bg-gray-50">
+        <View className="flex-1 bg-bg-default relative">
             {/* Background */}
             <StatusBar backgroundColor="#667eea" barStyle="light-content" />
             <View className="absolute bottom-0 left-0 right-0" style={{ zIndex: 0 }}>
@@ -267,7 +267,6 @@ const AllGroupsScreen = () => {
                     style={{
                         width: width,
                         height: height * 0.8,
-                        opacity: 0.05,
                         transform: [{ translateY: -height * 0.1 }]
                     }}
                     resizeMode="cover"

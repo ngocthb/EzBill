@@ -1,10 +1,11 @@
 import { Text, View } from 'react-native'
 import React from 'react'
-import { ScrollView, TouchableOpacity, Image, Dimensions, Animated, RefreshControl, Platform, StatusBar } from 'react-native';
+import { ScrollView, TouchableOpacity, Image, Dimensions, Animated, RefreshControl, Platform, StatusBar, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import bg1 from '../../assets/images/bg1.png';
 import homepage1 from '../../assets/images/homepage1.png';
 import homepage2 from '../../assets/images/homepage2.png';
@@ -14,10 +15,11 @@ import axiosClient from '../apis/axiosClient';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 const { width, height } = Dimensions.get('window');
-
+import sharingBill from '../../assets/images/sharingBill.gif';
 import { formatCurrency } from '../utils/formatUtils';
 import Notfound from '../components/Notfound';
-
+import { useAIChat } from '../contexts/AIChatContext';
+import test from '../../assets/images/test.jpg';
 const AnimatedCard = ({ children, delay = 0 }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
@@ -58,10 +60,14 @@ const AnimatedCard = ({ children, delay = 0 }) => {
 
 const HomeScreen = () => {
     const navigation = useNavigation();
+    const { toggleAIChat } = useAIChat();
     const [pressedCard, setPressedCard] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [haveNoti, setHaveNoti] = useState(false);
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
+    const [hasShownNotificationModal, setHasShownNotificationModal] = useState(false);
     const [stats, setStats] = useState({
         owed: 0,
         owes: 0,
@@ -85,13 +91,28 @@ const HomeScreen = () => {
 
             if (response.status === 200) {
                 setUser(response.data);
+
+                const notiRes = await axiosClient.get(`Settlement/debtor/${response.data.accountId}`);
+                if (notiRes.status === 200 && notiRes.data?.length > 0) {
+                    setShowNotificationModal(true);
+
+                    // Kiểm tra xem đã hiện modal hôm nay chưa
+                    const today = new Date().toDateString();
+                    const lastShownDate = await AsyncStorage.getItem('lastNotificationModalShown');
+
+                    if (lastShownDate !== today && !hasShownNotificationModal) {
+                        setShowNotificationModal(true);
+                        setHasShownNotificationModal(true);
+                        await AsyncStorage.setItem('lastNotificationModalShown', today);
+                    }
+                }
                 setStats({
                     owed: 1250000,
                     owes: 850000,
                     totalGroups: 8,
                     recentActivity: 3
                 });
-                const groupRes = await axiosClient.get(`account/${response.data.accountId}`);
+                const groupRes = await axiosClient.get(`trip/account/${response.data.accountId}`);
                 if (groupRes.status === 200) {
                     const sortedTrips = groupRes.data.sort((a, b) => {
                         return new Date(a.startDate) - new Date(b.startDate);
@@ -128,6 +149,23 @@ const HomeScreen = () => {
         navigation.navigate('Summary', { tripId: group?.tripId });
     };
 
+    const handleCloseNotificationModal = async () => {
+        setShowNotificationModal(false);
+        setHasShownNotificationModal(true);
+        const today = new Date().toDateString();
+        await AsyncStorage.setItem('lastNotificationModalShown', today);
+    };
+
+    const handleGoToNotifications = async () => {
+        setShowNotificationModal(false);
+        setHasShownNotificationModal(true);
+
+        const today = new Date().toDateString();
+        await AsyncStorage.setItem('lastNotificationModalShown', today);
+        navigation.navigate('Notification');
+    };
+
+
 
     return (
         <>
@@ -140,8 +178,9 @@ const HomeScreen = () => {
                         style={{
                             width: width,
                             height: height * 0.8,
-                            opacity: 0.05,
-                            transform: [{ translateY: -height * 0.1 }]
+                            opacity: 1,
+                            transform: [{ translateY: -height * 0.1 }],
+
                         }}
                         resizeMode="cover"
                     />
@@ -181,7 +220,10 @@ const HomeScreen = () => {
                                     {user?.email ? user.email.split('@')[0].replace(/\d+/g, '') : 'User'}
                                 </Text>
                             </View>
-                            <TouchableOpacity className="w-12 h-12 bg-white/20 rounded-full items-center justify-center">
+                            <TouchableOpacity
+                                className="w-12 h-12 bg-white/20 rounded-full items-center justify-center"
+                                onPress={() => navigation.navigate('Notification')}
+                            >
                                 <Ionicons name="notifications-outline" size={24} color="white" />
                             </TouchableOpacity>
                         </View>
@@ -278,7 +320,7 @@ const HomeScreen = () => {
                     </View>
 
                     {/* Quick Actions */}
-                    <View className="px-6 mb-6">
+                    {/* <View className="px-6 mb-6">
                         <Text className="text-gray-800 text-xl font-bold mb-4">Thao tác nhanh</Text>
                         <View className="flex-row justify-between">
                             {[
@@ -305,7 +347,7 @@ const HomeScreen = () => {
                                 </AnimatedCard>
                             ))}
                         </View>
-                    </View>
+                    </View> */}
 
                     {/* Feature Cards */}
                     <ScrollView
@@ -417,7 +459,92 @@ const HomeScreen = () => {
                         </View>
                     </View>
                 </ScrollView>
-            </View></>
+            </View>
+
+            {/* Notification Modal */}
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={showNotificationModal}
+                onRequestClose={handleCloseNotificationModal}
+            >
+                <View className="flex-1 justify-center items-center bg-black/50">
+                    <View className="bg-white rounded-3xl p-6 mx-6 items-center relative" style={{
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 10 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 20,
+                        elevation: 10,
+                        maxWidth: width * 1,
+                    }}>
+                        {/* Close Button */}
+                        <TouchableOpacity
+                            onPress={handleCloseNotificationModal}
+                            className="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
+                            style={{ zIndex: 10 }}
+                        >
+                            <Ionicons name="close" size={20} color="#6B7280" />
+                        </TouchableOpacity>
+
+                        <Text className="text-2xl text-black mt-6 font-semibold text-center ">
+                            Thư ơi cho em xin 419k hôm bữa đi mò, chuyển tiền ăn lẩu hôm trước ý👉🏻👈🏻✨
+                        </Text>
+                        <View className="items-center mb-6">
+                            <Image
+                                source={test}
+                                style={{ width: 160, height: 160 }}
+                                resizeMode="contain"
+                            />
+
+                        </View>
+
+                        {/* Content */}
+
+
+                        {/* Action Buttons */}
+                        <View className="w-full flex justify-center items-center">
+                            <TouchableOpacity
+                                onPress={handleGoToNotifications}
+                                className="w-full mb-3 flex-col items-center justify-center"
+                            >
+                                <LinearGradient
+                                    colors={['#667eea', '#764ba2']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+
+                                    style={{
+                                        shadowColor: '#667eea',
+                                        shadowOffset: { width: 0, height: 4 },
+                                        shadowOpacity: 0.3,
+                                        shadowRadius: 8,
+                                        elevation: 6,
+                                        padding: 12,
+                                        borderRadius: 24,
+                                    }}
+                                >
+                                    <View className="flex-row items-center justify-center">
+                                        <Ionicons name="notifications" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                                        <Text className="text-white text-lg font-bold">
+                                            Xem thông báo
+                                        </Text>
+                                    </View>
+                                </LinearGradient>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={handleCloseNotificationModal}
+                                className="self-center py-3 px-6 bg-gray-100 rounded-2xl"
+                            >
+                                <Text className="text-gray-600 text-center font-semibold">
+                                    Để sau
+                                </Text>
+                            </TouchableOpacity>
+
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </>
     )
 }
 

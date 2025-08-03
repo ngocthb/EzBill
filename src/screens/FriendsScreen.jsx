@@ -237,7 +237,7 @@ const FriendsScreen = () => {
     );
 
     return (
-        <SafeAreaView className="flex-1 bg-bg-default">
+        <View className="flex-1 bg-bg-default">
             {/* Background */}
             <View
                 className='absolute bottom-0 left-0 right-0'
@@ -259,10 +259,13 @@ const FriendsScreen = () => {
                 colors={['#667eea', '#764ba2']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                className="px-6 pt-4 pb-6"
+
                 style={{
                     borderBottomLeftRadius: 30,
-                    borderBottomRightRadius: 30
+                    borderBottomRightRadius: 30,
+                    paddingTop: 50,
+                    paddingBottom: 20,
+                    paddingHorizontal: 20,
                 }}
             >
                 <View className="flex-row items-center justify-between mb-6">
@@ -408,12 +411,19 @@ const FriendsScreen = () => {
             >
                 <LinearGradient
                     colors={['#667eea', '#764ba2']}
-                    className="w-16 h-16 rounded-full items-center justify-center"
+                    style={{
+                        padding: 8,
+                        borderRadius: 50,
+                        width: 64,
+                        height: 64,
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
                 >
                     <Ionicons name="person-add" size={28} color="white" />
                 </LinearGradient>
             </TouchableOpacity>
-        </SafeAreaView>
+        </View>
     );
 };
 

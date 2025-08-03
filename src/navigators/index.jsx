@@ -21,11 +21,12 @@ import {
     FriendsScreen,
     ScanBillScreen,
     TaxRefundScreen,
-    AllGroupsScreen
+    AllGroupsScreen,
+    NotificationScreen
 } from '../screens';
 import HomeTabs from './BottomTabs';
 
-import HistoryScreen from '../screens/HistoryScreen';
+
 import ProfileScreen from '../screens/ProfileScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 
@@ -103,6 +104,13 @@ const AppNavigator = () => {
                     }}
                 />
                 <Stack.Screen
+                    name='Notification'
+                    component={NotificationScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
+                <Stack.Screen
                     name='CreateGroup'
                     component={CreateGroupScreen}
                     options={{
@@ -136,13 +144,7 @@ const AppNavigator = () => {
                         gestureEnabled: true
                     }}
                 />
-                <Stack.Screen
-                    name='History'
-                    component={HistoryScreen}
-                    options={{
-                        gestureEnabled: true
-                    }}
-                />
+
                 <Stack.Screen
                     name='Dashboard'
                     component={DashboardScreen}

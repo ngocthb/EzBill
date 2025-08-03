@@ -13,11 +13,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import bg1 from '../../assets/images/bg1.png';
 import summary1 from '../../assets/images/summary1.png';
-import axiosClient from '~/apis/axiosClient';
+import axiosClient from '../apis/axiosClient';
 import Toast from 'react-native-toast-message';
 import { formatEmail, formatCurrency } from '../utils/formatUtils';
 import sharingBill from '../../assets/images/sharingBill.gif';
-
+import hcmt from '../../assets/images/hcmt.png';
+import hhuy from '../../assets/images/hhuy.webp';
+import trihcmse from '../../assets/images/trihcmse.webp';
+import paavagl from '../../assets/images/paavagl.webp';
 const ShareBill = () => {
     const navigation = useNavigation();
     const route = useRoute();
@@ -59,17 +62,14 @@ const ShareBill = () => {
         }, [tripId])
     );
 
-    const payerList = resultShareBillData.filter(item => item.status === "UNPAID" && item.fromAccountName);
-    const debtList = resultShareBillData.filter(item => item.status === "UNPAID" && item.toAccountName);
+    const debtList = resultShareBillData.filter(item => item.status === "UNPAID");
 
     const handleCreateReminder = () => {
         console.log('Create Reminder');
     };
 
     const totalAmount = resultShareBillData.reduce((sum, item) => sum + item.amount, 0);
-    const uniqueMembers = new Set(resultShareBillData.flatMap(item => [item.fromAccountName, item.toAccountName]));
-    const numberOfMembers = uniqueMembers.size;
-    const averageAmount = numberOfMembers > 0 ? totalAmount / numberOfMembers : 0;
+    const totalDebts = debtList.length;
 
     if (loading) {
         return (
@@ -122,46 +122,16 @@ const ShareBill = () => {
                     <View className="flex-row px-6 py-6 bg-gray-50/55 mb-2">
                         <View className="flex-1 items-center bg-white rounded-2xl py-4 mx-1 shadow-sm">
                             <Text className="text-lg font-bold text-gray-800">{formatCurrency(totalAmount)}</Text>
-                            <Text className="text-xs text-gray-500 mt-1">Tổng tiền</Text>
+                            <Text className="text-xs text-gray-500 mt-1">Tổng tiền nợ</Text>
                         </View>
 
                         <View className="flex-1 items-center bg-white rounded-2xl py-4 mx-1 shadow-sm">
-                            <Text className="text-lg font-bold text-gray-800">{formatCurrency(averageAmount)}</Text>
-                            <Text className="text-xs text-gray-500 mt-1">Trung bình</Text>
+                            <Text className="text-lg font-bold text-gray-800">{totalDebts}</Text>
+                            <Text className="text-xs text-gray-500 mt-1">Số khoản nợ</Text>
                         </View>
                     </View>
 
                     <ScrollView className="flex-1 " showsVerticalScrollIndicator={false}>
-                        {/* Payers Section */}
-                        <View className="px-6 py-6">
-                            <View className="flex-row items-center mb-4">
-                                <View className="w-10 h-10 rounded-full bg-emerald-100 items-center justify-center mr-3">
-                                    <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-                                </View>
-                                <Text className="text-lg font-bold text-gray-800">Người trả tiền</Text>
-                                <View
-                                    className="ml-2 px-2 py-1 rounded-full"
-                                    style={{ backgroundColor: '#d1fae5' }}
-                                >
-                                    <Text className="text-xs font-bold text-emerald-700">{payerList.length}</Text>
-                                </View>
-                            </View>
-                            {payerList.map((payer, index) => (
-                                <View key={index} className=" p-4 flex-row items-center  mb-3">
-                                    <View className="w-12 h-12 rounded-full  items-center justify-center mr-4">
-                                        <Image source={{ uri: "https://tse3.mm.bing.net/th/id/OIP.NCWhq45BtHNU_OWkdNjP0gHaHa?r=0&w=512&h=512&rs=1&pid=ImgDetMain&o=7&rm=3" }} className="w-10 h-10 rounded-full" />
-                                    </View>
-                                    <View className="flex-1">
-                                        <Text className="text-base font-bold text-gray-800">{formatEmail(payer.fromAccountName)}</Text>
-                                        <Text className="text-sm text-emerald-600 mt-1 font-semibold">✓ Đã thanh toán {formatCurrency(payer.amount)} cho {payer.tripName}</Text>
-                                    </View>
-                                    <View className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center">
-                                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
-
                         {/* Debts Section */}
                         <View className="px-6 py-6">
                             <View className="flex-row items-center mb-4">
@@ -182,18 +152,28 @@ const ShareBill = () => {
                             {debtList.map((debt, index) => (
                                 <View key={index} className="flex-row items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
                                     <View className="flex-row items-center flex-1">
-                                        <Image source={{ uri: "https://tse3.mm.bing.net/th/id/OIP.NCWhq45BtHNU_OWkdNjP0gHaHa?r=0&w=512&h=512&rs=1&pid=ImgDetMain&o=7&rm=3" }} className="w-12 h-12 rounded-full mr-3" />
+                                        <Image source={
+                                            debt.fromAccountName === 'huynhcongminhtri79@gmail.com' ? hcmt :
+                                                debt.fromAccountName === 'hhuy00355@gmail.com' ? hhuy :
+                                                    debt.fromAccountName === 'trihcmse183799@fpt.edu.vn' ? trihcmse :
+                                                        paavagl
+                                        } className="w-12 h-12 rounded-full mr-3" />
                                         <View className="flex-1">
-                                            <Text className="text-base font-semibold text-gray-800">{formatEmail(debt.toAccountName)}</Text>
-                                            <Text className="text-sm text-gray-500 mt-1">Cần thanh toán</Text>
+                                            <Text className="text-base font-semibold text-gray-800">{formatEmail(debt.fromAccountName)}</Text>
+                                            <Text className="text-sm text-gray-500 mt-1">Người nợ</Text>
                                         </View>
                                     </View>
                                     <View className="items-end">
                                         <Text className="text-lg font-bold text-rose-500">{formatCurrency(debt.amount)}</Text>
                                         <View className="flex-row items-center mt-1">
-                                            <Text className="text-xs text-gray-400 mr-1">đến</Text>
-                                            <Image source={bg1} className="w-5 h-5 rounded-full mr-1" />
-                                            <Text className="text-xs font-medium text-emerald-600">{formatEmail(debt.fromAccountName)}</Text>
+                                            <Text className="text-xs text-gray-400 mr-1">cho</Text>
+                                            <Image source={
+                                                debt.toAccountName === 'huynhcongminhtri79@gmail.com' ? hcmt :
+                                                    debt.toAccountName === 'hhuy00355@gmail.com' ? hhuy :
+                                                        debt.toAccountName === 'trihcmse183799@fpt.edu.vn' ? trihcmse :
+                                                            paavagl
+                                            } className="w-5 h-5 rounded-full mr-1" />
+                                            <Text className="text-xs font-medium text-emerald-600">{formatEmail(debt.toAccountName)}</Text>
                                         </View>
                                     </View>
                                 </View>

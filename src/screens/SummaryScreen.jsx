@@ -19,7 +19,10 @@ import Toast from 'react-native-toast-message';
 import { useRoute } from '@react-navigation/native';
 import { formatCurrencyWithOptions, formatEmail } from '../utils/formatUtils';
 import Notfound from '~/components/Notfound';
-
+import hcmt from '../../assets/images/hcmt.png';
+import hhuy from '../../assets/images/hhuy.webp';
+import trihcmse from '../../assets/images/trihcmse.webp';
+import paavagl from '../../assets/images/paavagl.webp';
 
 const { width, height } = Dimensions.get('window');
 
@@ -180,6 +183,7 @@ const SummaryScreen = () => {
     );
 
 
+
     return (
         <View className='flex-1 bg-bg-default relative'>
 
@@ -199,31 +203,44 @@ const SummaryScreen = () => {
             </View>
 
             {/* Header */}
-            <View
-                className='flex-row items-center justify-between px-4 pt-12 pb-4'
-                style={{ zIndex: 1 }}
+            <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    paddingTop: 50,
+                    paddingBottom: 25,
+                    paddingHorizontal: 20,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    elevation: 8,
+                }}
             >
-                <TouchableOpacity
-                    onPress={handleBack}
-                    className='flex-row items-center p-3'
-                >
-                    <Ionicons
-                        name='chevron-back-outline'
-                        size={28}
-                        color='#6C63FF'
-                        style={{ marginRight: 4 }}
-                    />
-                </TouchableOpacity>
-                <Text
-                    className='text-xl font-bold text-gray-900'
-                    style={{ textAlign: 'center', flex: 1 }}
-                >
-                    Tổng quan nhóm
-                </Text>
-                <View style={{ width: 28 }} />
-            </View>
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <TouchableOpacity
+                            onPress={() => navigation.goBack()}
+                            className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm items-center justify-center mr-4"
+                            style={{
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
+                            }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <View>
+                            <Text className="text-white text-2xl font-bold">Nhóm của bạn</Text>
+                            <Text className="text-white/80 text-sm mt-1">Tổng quan nhóm</Text>
+                        </View>
+                    </View>
+                </View>
+            </LinearGradient>
 
-            <View className='flex-1 px-6' style={{ zIndex: 1 }}>
+            <View className='flex-1 px-6 mt-3' style={{ zIndex: 1 }}>
                 <ScrollView
                     className='flex-1'
                     showsVerticalScrollIndicator={false}
@@ -244,7 +261,7 @@ const SummaryScreen = () => {
                         <View className='items-center mb-6'>
                             <View className='w-24 h-24 rounded-full mb-4 overflow-hidden'>
                                 <Image
-                                    source={{ uri: "https://img-s-msn-com.akamaized.net/tenant/amp/entityid/BB1msOP5?w=0&h=0&q=60&m=6&f=jpg&u=t" }}
+                                    source={{ uri: "https://i.pinimg.com/736x/67/ba/ce/67bace3535ae85d0338e3f86ea6dd582.jpg" }}
                                     style={{
                                         width: '100%',
                                         height: '100%'
@@ -308,7 +325,12 @@ const SummaryScreen = () => {
                                     <View className='flex-row items-center flex-1'>
                                         <View className='w-10 h-10 rounded-full mr-3 overflow-hidden'>
                                             <Image
-                                                source={{ uri: "https://tse1.mm.bing.net/th/id/OIP.4-sbLLBhDhOMgWeYXs8Y9QHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" }}
+                                                source={
+                                                    member.email === 'huynhcongminhtri79@gmail.com' ? hcmt :
+                                                        member.email === 'hhuy00355@gmail.com' ? hhuy :
+                                                            member.email === 'trihcmse183799@fpt.edu.vn' ? trihcmse :
+                                                                paavagl
+                                                }
                                                 style={{
                                                     width: '100%',
                                                     height: '100%'
